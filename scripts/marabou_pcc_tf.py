@@ -5,15 +5,21 @@ from tensorflow.python.saved_model import tag_constants
 
 
 
-def run_marabou(filename)
-    network = Marabou.read_tf(filename) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
+def run_marabou(filename):
+    # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
+    network = Marabou.read_tf(filename, inputName="input/Ob",outputName="output/split") #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
 
     ## Or, you can specify the operation names of the input and output operations
     ## By default chooses the only placeholder as input, last op as output
 
     # Get the input and output variable numbers; [0] since first dimension is batch size
     inputVars = network.inputVars[0][0]
+
     outputVars = network.outputVars[0]
+    print("inputVars len =", len(inputVars))
+    print("outputVars len =", len(outputVars))
+    exit(0)
+
 
     # Set input bounds
     network.setLowerBound(inputVars[0],-10.0)

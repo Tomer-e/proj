@@ -1,6 +1,7 @@
 from NNet.converters.pb2nnet import pb2nnet
 from tensorflow.python.saved_model import tag_constants
 import sys
+import numpy as np
 
 
 ## Script showing how to run pb2nnet
@@ -19,12 +20,25 @@ import sys
 # pb2nnet(pbFile, savedModel=True, savedModelTags=tag_constants.SERVING)
 
 
+# pb2nnet(pbFile, inputMins=None, inputMaxes=None, means=None, ranges=None, nnetFile="", inputName="", outputName="", savedModel=False, savedModelTags=[]):
 def main():
     if len(sys.argv)!= 2:
         print("usage:",sys.argv[0], "<pbFile_name>")
         exit(0)
     pbFile = sys.argv[1]
-    pb2nnet(pbFile)
+
+    inputMins = np.zeros((30))
+    inputMaxes = np.ones((30))
+
+    # Mean and range values for normalizing the inputs and outputs. All outputs are normalized with the same value
+    means = np.zeros((31))  # inputs+1 output
+    means.fill(0.5)
+    ranges = np.ones((31))  # inputs+1 output
+    ranges[30] = 255
+
+    inputName = 'input/Ob'
+    outputName = 'model/split'
+    pb2nnet(pbFile,inputMins=inputMins, inputMaxes=inputMaxes, means=means, ranges=ranges, inputName=inputName,outputName=outputName)
 
 
 if __name__ == "__main__":
