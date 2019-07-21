@@ -26,14 +26,15 @@ def run_marabou(filename):
     print(network.inputVars)
 
     # Set input bounds
-    network.setLowerBound(inputVars[0],-10.0)
-    network.setUpperBound(inputVars[0], 10.0)
-    network.setLowerBound(inputVars[1],-10.0)
-    network.setUpperBound(inputVars[1], 10.0)
+    for i in range (len(inputVars)):
+        network.setLowerBound(inputVars[i],-10.0)
+        network.setUpperBound(inputVars[i], 10.0)
+
 
     # Set output bounds
-    network.setLowerBound(outputVars[0], 0)
-    network.setUpperBound(outputVars[0], 210.0)
+    for i in range(len(outputVars)):
+        network.setLowerBound(outputVars[i], 0)
+        network.setUpperBound(outputVars[i], 1)
     print("\n===== Marabou =====\n")
     # Call to C++ Marabou solver
     vals, stats = network.solve() #("marabou.log")
