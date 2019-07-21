@@ -18,8 +18,12 @@ def run_marabou(filename):
     outputVars = network.outputVars[0]
     print("inputVars len =", len(inputVars))
     print("outputVars len =", len(outputVars))
+    print("outputVars[0]  =", outputVars[0])
+    print("outputVars[0].type  =", type(outputVars[0]))
+    # print("outputVars[0].shape  =", outputVars[0].shape)
     # exit(0)
 
+    print(network.inputVars)
 
     # Set input bounds
     network.setLowerBound(inputVars[0],-10.0)
@@ -28,11 +32,11 @@ def run_marabou(filename):
     network.setUpperBound(inputVars[1], 10.0)
 
     # Set output bounds
-    network.setLowerBound(outputVars[1], 194.0)
-    network.setUpperBound(outputVars[1], 210.0)
-
+    network.setLowerBound(outputVars[0], 0)
+    network.setUpperBound(outputVars[0], 210.0)
+    print("\n===== Marabou =====\n")
     # Call to C++ Marabou solver
-    vals, stats = network.solve("marabou.log")
+    vals, stats = network.solve() #("marabou.log")
 
 
 
