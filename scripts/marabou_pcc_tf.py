@@ -21,23 +21,34 @@ def run_marabou(filename):
     print("outputVars[0]  =", outputVars[0])
     print("outputVars[0].type  =", type(outputVars[0]))
     # print("outputVars[0].shape  =", outputVars[0].shape)
+
     # exit(0)
 
     print(network.inputVars)
 
     # Set input bounds
-    for i in range (len(inputVars)):
-        network.setLowerBound(inputVars[i],-10.0)
-        network.setUpperBound(inputVars[i], 10.0)
+    # 0 - 9   : latency gradient, the derivative of latency with respect to time
+    # 10 - 19 : latency ratio, the ratio of the current MI’s mean latency to minimum observed mean latency of any MI in
+    #           the connection’s history
+    # 20 - 29 : sending ratio, the ratio of packets sent to packets acknowledged by the receiver
+    for i in range (0,10):
+        network.setLowerBound(inputVars[i],0)
+        network.setUpperBound(inputVars[i], 0)
+    for i in range(10, 20):
+        network.setLowerBound(inputVars[i], 0)
+        network.setUpperBound(inputVars[i], 1)
+    for i in range(20, 30):
+        network.setLowerBound(inputVars[i], 0)
+        network.setUpperBound(inputVars[i], 1e9)
 
 
     # Set output bounds
     for i in range(len(outputVars)):
         network.setLowerBound(outputVars[i], 0)
-        network.setUpperBound(outputVars[i], 1)
+        network.setUpperBound(outputVars[i], 0)
     print("\n===== Marabou =====\n")
     # Call to C++ Marabou solver
-    vals, stats = network.solve() #("marabou.log")
+    vals, stats = network.solve("results/mavrl_marabou.log")
 
 
 
