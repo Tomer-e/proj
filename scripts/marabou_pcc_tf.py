@@ -48,7 +48,7 @@ def run_marabou(filename):
         network.setUpperBound(outputVars[i], 0)
     print("\n===== Marabou =====\n")
     # Call to C++ Marabou solver
-    vals, stats = network.solve("results/mavrl_marabou.log")
+    vals, stats = network.solve("results/vrl_marabou.log")
 
 
 
