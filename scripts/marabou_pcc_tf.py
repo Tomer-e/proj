@@ -1,16 +1,19 @@
 
-from maraboupy import Marabou
+from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 from tensorflow.python.saved_model import tag_constants
 
 
 
-def run_marabou(filename):
+def run_marabou(filename, to_log_file):
+    output_op_name = "model/pi/add"
     # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
-    network = Marabou.read_tf(filename, inputName=["input/Ob"],outputName="model/split") #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
+    network = Marabou.read_tf(filename, inputName=["input/Ob"],outputName=output_op_name) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
 
     ## Or, you can specify the operation names of the input and output operations
     ## By default chooses the only placeholder as input, last op as output
+
+    # vals, stats = network.solve() # "results/vrl_marabou.log")
 
     # Get the input and output variable numbers; [0] since first dimension is batch size
     inputVars = network.inputVars[0][0]
@@ -18,6 +21,8 @@ def run_marabou(filename):
     outputVars = network.outputVars[0]
     print("inputVars len =", len(inputVars))
     print("outputVars len =", len(outputVars))
+    print("outputVars =", outputVars)
+    print("network outputVars =", network.outputVars)
     print("outputVars[0]  =", outputVars[0])
     print("outputVars[0].type  =", type(outputVars[0]))
     # print("outputVars[0].shape  =", outputVars[0].shape)
@@ -31,35 +36,77 @@ def run_marabou(filename):
     # 10 - 19 : latency ratio, the ratio of the current MI’s mean latency to minimum observed mean latency of any MI in
     #           the connection’s history
     # 20 - 29 : sending ratio, the ratio of packets sent to packets acknowledged by the receiver
+    sanity_inputs =[]
+    eps0 = network.getNewVariable()
+    eps1 = network.getNewVariable()
+    # network.inputVars.append(eps)
+    # print("epsilon =" ,eps)
+    # print("network.inputVars[0][0]="  , network.inputVars[0][0])
+    # print ("network.inputVars", network.inputVars)
+
+    network.setLowerBound(eps0, -0.01)
+    network.setUpperBound(eps0, 0.01)
+    network.setLowerBound(eps1, 0)
+    network.setUpperBound(eps1, 0.01)
+
     for i in range (0,10):
-        network.setLowerBound(inputVars[i],0)
-        network.setUpperBound(inputVars[i], 0)
+        # l = 0 - eps
+        # u = 0 + eps
+        # network.setUpperBound(inputVars[i], u)
+        # network.setLowerBound(inputVars[i],l)
+        sanity_inputs.append(0)
+        eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
+        eq.addAddend(1, inputVars[i])
+        eq.addAddend(-1, eps0)
+        eq.setScalar(0)
+        network.addEquation(eq)
+
     for i in range(10, 20):
-        network.setLowerBound(inputVars[i], 0)
-        network.setUpperBound(inputVars[i], 1)
+        # l = 1
+        # u = 1 + eps
+        # network.setUpperBound(inputVars[i], u)
+        # network.setLowerBound(inputVars[i], l)
+        sanity_inputs.append(1)
+        eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
+        eq.addAddend(1, inputVars[i])
+        eq.addAddend(-1, eps1)
+        eq.setScalar(1)
+        network.addEquation(eq)
+
     for i in range(20, 30):
-        network.setLowerBound(inputVars[i], 0)
-        network.setUpperBound(inputVars[i], 1e9)
+        l = 1
+        u = 1
+        network.setUpperBound(inputVars[i], u)
+        network.setLowerBound(inputVars[i], l)
+        sanity_inputs.append((u+l)//2)
 
-
-    # Set output bounds
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], 0)
-        network.setUpperBound(outputVars[i], 0)
-    print("\n===== Marabou =====\n")
-    # Call to C++ Marabou solver
-    vals, stats = network.solve("results/vrl_marabou.log")
+        network.setLowerBound(outputVars[i], -1)
+        network.setUpperBound(outputVars[i], 1)
 
+    sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
+
+    print("my inputs:", sanity_inputs)
+
+    print ("network output for my inputs:",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
+
+    print("\n===== Marabou =====\n")
+
+    # Call to C++ Marabou solver
+    if to_log_file:
+        vals, stats = network.solve("results/vrl_marabou.log")
+    else:
+        vals, stats = network.solve()
 
 
 import sys
 
 def main():
-    if len(sys.argv)!=2:
-        print("usage:",sys.argv[0], "<pb_filename>")
+    if len(sys.argv) not in [2,3]:
+        print("usage:",sys.argv[0], "<pb_filename> [-l]")
         exit(0)
     filename = sys.argv[1]
-    run_marabou(filename)
+    run_marabou(filename, len(sys.argv) == 3)
 
 
 if __name__ == "__main__":
