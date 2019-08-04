@@ -1,14 +1,16 @@
 
 from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
+from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
 
 
 
 def run_marabou(filename, to_log_file):
     output_op_name = "model/pi/add"
+    input_op_names = ["input/Ob"]
     # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
-    network = Marabou.read_tf(filename, inputName=["input/Ob"],outputName=output_op_name) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
+    network = Marabou.read_tf(filename, inputName=input_op_names,outputName=output_op_name) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
 
     ## Or, you can specify the operation names of the input and output operations
     ## By default chooses the only placeholder as input, last op as output
@@ -88,7 +90,9 @@ def run_marabou(filename, to_log_file):
 
     print("my inputs:", sanity_inputs)
 
-    print ("network output for my inputs:",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
+    print("network output for my inputs(MY):",evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
+
+    print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
 
     print("\n===== Marabou =====\n")
 
