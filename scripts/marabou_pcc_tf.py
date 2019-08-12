@@ -96,6 +96,8 @@ def basic_test(filename, to_log_file):
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
     else:
         vals, stats = network.solve(verbose=False)
+        print('marabou solve run result: {} '.format(
+            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
 
 
@@ -177,8 +179,9 @@ def basic_test_2(filename, to_log_file):
         # print('marabou solve run result: {} '.format(
             # 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
     else:
-        vals, stats = network.solve(verbose=True)
-
+        vals, stats = network.solve(verbose=False)
+        print('marabou solve run result: {} '.format(
+            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
 
 import sys
