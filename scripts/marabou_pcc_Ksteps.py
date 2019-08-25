@@ -36,13 +36,52 @@ def basic_test(filename, to_log_file):
     print(network.inputVars)
 
     sanity_inputs =[]
+    eps_a = network.getNewVariable()
+    eps_b = network.getNewVariable()
     eps0 = network.getNewVariable()
     eps1 = network.getNewVariable()
+    eps2 = network.getNewVariable()
+    a = network.getNewVariable()
+    b = network.getNewVariable()
+
+    network.setLowerBound(eps_a, -5)
+    network.setUpperBound(eps_a, 5)
+
+    network.setLowerBound(eps_b, -5)
+    network.setUpperBound(eps_b, 5)
 
     network.setLowerBound(eps0, -0.01)
     network.setUpperBound(eps0, 0.01)
+
     network.setLowerBound(eps1, 0)
     network.setUpperBound(eps1, 0.01)
+
+    network.setLowerBound(eps2, 1/1e2)
+    network.setUpperBound(eps2, 1e9)
+
+    eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
+    eq.addAddend(1, a)
+    eq.addAddend(-1, eps_a)
+    eq.setScalar(0)
+    network.addEquation(eq)
+
+    eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
+    eq.addAddend(1, b)
+    eq.addAddend(-1, eps_b)
+    eq.setScalar(0)
+    network.addEquation(eq)
+
+    eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
+    eq.addAddend(1, a)
+    eq.addAddend(-1, b)
+    eq.addAddend(-1, eps2)
+    eq.setScalar(0)
+    network.addEquation(eq)
+
+
+
+
+
 
     for i in range (0, 10):
         # l = 0 - eps
@@ -53,7 +92,10 @@ def basic_test(filename, to_log_file):
         sanity_inputs.append(0)
         eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
         eq.addAddend(1, inputVars[i])
-        eq.addAddend(-1, eps0)
+        if i % 2 == 0:
+            eq.addAddend(-1, a)
+        else:
+            eq.addAddend(-1, b)
         eq.setScalar(0)
         network.addEquation(eq)
 
@@ -77,8 +119,6 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(inputVars[i], l)
         sanity_inputs.append((u+l)//2)
 
-    network_idx = 2;
-
     for i in range(30 + 0, 30 + 10):
         # l = 0 - eps
         # u = 0 + eps
@@ -88,7 +128,11 @@ def basic_test(filename, to_log_file):
         # sanity_inputs.append(0)
         eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
         eq.addAddend(1, inputVars[i])
-        eq.addAddend(-1, eps0)
+
+        if i % 2 == 0:
+            eq.addAddend(-1, b)
+        else:
+            eq.addAddend(-1, a)
         eq.setScalar(0)
         network.addEquation(eq)
 
@@ -106,16 +150,16 @@ def basic_test(filename, to_log_file):
         network.addEquation(eq)
 
     for i in range(30 + 20, 30 + 30):
-        l = 2
-        u = 2
+        l = 1
+        u = 1
         network.setUpperBound(inputVars[i], u)
         network.setLowerBound(inputVars[i], l)
         # sanity_inputs.append((u + l) // 2)
 
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], -100)
-        network.setUpperBound(outputVars[i], 100)
+        network.setLowerBound(outputVars[i], -0.01)
+        network.setUpperBound(outputVars[i], 0.01)
 
     sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
 
