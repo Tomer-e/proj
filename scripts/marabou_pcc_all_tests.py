@@ -5,6 +5,30 @@ from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
 
 
+def get_marabou_results(network, to_log_file):
+    print("\nMarabou results:\n")
+
+    # Call to C++ Marabou solver
+    if to_log_file:
+        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+        print('marabou solve run result: {} '.format(
+            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    else:
+        vals, stats = network.solve(verbose=False)
+        print('marabou solve run result: {} '.format(
+            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+
+    # # Call to C++ Marabou solver
+    # if to_log_file:
+    #     vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    #     # print('marabou solve run result: {} '.format(
+    #         # 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # else:
+    #     vals, stats = network.solve(verbose=False)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
 def create_network(filename):
     output_op_name = "model/pi/add"
@@ -20,22 +44,17 @@ def create_network(filename):
 # 20 - 29 : sending ratio, the ratio of packets sent to packets acknowledged by the receiver
 
 def basic_test(filename, to_log_file):
+    """inputs: latency gradient in [-0.01,0.01], latency ratio in [1,1.01], send ratio = 1. output in [-1,1]"""
 
     network,input_op_names, output_op_name =  create_network(filename)
-
+    print("inputs: latency gradient in [-0.01,0.01], latency ratio in [1,1.01], send ratio = 1. output in [-1,1]")
     # Get the input and output variable numbers; [0] since first dimension is batch size
     inputVars = network.inputVars[0][0]
 
     outputVars = network.outputVars[0]
-    # print("inputVars len =", len(inputVars))
-    # print("outputVars len =", len(outputVars))
-    # print("outputVars =", outputVars)
-    # print("network outputVars =", network.outputVars)
-    # print("outputVars[0]  =", outputVars[0])
-    # print("outputVars[0].type  =", type(outputVars[0]))
-    # print(network.inputVars)
 
     sanity_inputs =[]
+
     eps0 = network.getNewVariable()
     eps1 = network.getNewVariable()
 
@@ -86,25 +105,14 @@ def basic_test(filename, to_log_file):
 
     print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
     # print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
-
-    print("\nMarabou results:\n")
-
-    # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    get_marabou_results(network, to_log_file)
 
 
 
 def basic_test_2(filename, to_log_file):
-
+    """inputs: latency gradient in [-0.01,0.01], latency ratio in [1,1.01], send ratio >= 1.05 output = 0"""
     network,input_op_names, output_op_name =  create_network(filename)
-
+    print("inputs: latency gradient in [-0.01,0.01], latency ratio in [1,1.01], send ratio >= 1.05 output = 0")
     # Get the input and output variable numbers; [0] since first dimension is batch size
     inputVars = network.inputVars[0][0]
 
@@ -170,18 +178,11 @@ def basic_test_2(filename, to_log_file):
     print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
     # print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
 
+
     print("\nMarabou results:\n")
-    # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-        # print('marabou solve run result: {} '.format(
-            # 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    get_marabou_results(network, to_log_file)
+
+
 
 
 import sys
@@ -196,10 +197,7 @@ def main():
     print("=========================-basic_test-=========================")
     basic_test(filename, len(sys.argv) == 3)
     print("=========================-basic_test_2-=========================")
-    # basic_test_2(filename, len(sys.argv) == 3)
-
-
-
+    basic_test_2(filename, len(sys.argv) == 3)
 
 
 

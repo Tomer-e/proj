@@ -23,7 +23,7 @@ def basic_test(filename, to_log_file):
 
     network,input_op_names, output_op_name =  create_network(filename)
 
-    # Get the input and output variable numbers; [0] since first dimension is batch size
+    # Get the input and output variable numbers;
     inputVars = network.inputVars
 
     outputVars = network.outputVars
@@ -38,24 +38,25 @@ def basic_test(filename, to_log_file):
     sanity_inputs =[]
     eps_a = network.getNewVariable()
     eps_b = network.getNewVariable()
-    eps0 = network.getNewVariable()
+
     eps1 = network.getNewVariable()
     eps2 = network.getNewVariable()
     a = network.getNewVariable()
     b = network.getNewVariable()
 
-    network.setLowerBound(eps_a, -5)
-    network.setUpperBound(eps_a, 5)
+    # epsilon for bounding latency gradient (when i%2==0)
+    network.setLowerBound(eps_a, -0.1)
+    network.setUpperBound(eps_a, 0.1)
 
-    network.setLowerBound(eps_b, -5)
-    network.setUpperBound(eps_b, 5)
+    # epsilon for bounding latency gradient (when i%2==1)
+    network.setLowerBound(eps_b, -0.1)
+    network.setUpperBound(eps_b, 0.1)
 
-    network.setLowerBound(eps0, -0.01)
-    network.setUpperBound(eps0, 0.01)
-
+    # epsilon for bounding latency ratio
     network.setLowerBound(eps1, 0)
-    network.setUpperBound(eps1, 0.01)
+    network.setUpperBound(eps1, 0.1)
 
+    # epsilon for separate a and b
     network.setLowerBound(eps2, 1/1e2)
     network.setUpperBound(eps2, 1e9)
 
@@ -77,10 +78,6 @@ def basic_test(filename, to_log_file):
     eq.addAddend(-1, eps2)
     eq.setScalar(0)
     network.addEquation(eq)
-
-
-
-
 
 
     for i in range (0, 10):
@@ -182,10 +179,6 @@ def basic_test(filename, to_log_file):
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
-
-
-
-
 import sys
 
 def main():
@@ -197,10 +190,6 @@ def main():
     filename = sys.argv[1]
     print("=========================-basic_test-=========================")
     basic_test(filename, len(sys.argv) == 3)
-
-
-
-
 
 
 
