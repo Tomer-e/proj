@@ -1,7 +1,4 @@
 import sys
-# import MarabouTestRunner as runner
-sys.path.append("/cs/usr/tomerel/unsafe/VerifyingDeepRL/Marabou_forked")
-print(sys.path)
 from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 from eval_network import evaluateNetwork
