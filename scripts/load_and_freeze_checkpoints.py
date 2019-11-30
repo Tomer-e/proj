@@ -8,11 +8,12 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph):
     #     tf.saved_model.loader.load(sess, [tf.saved_model.tag_constants.SERVING], export_dir)
     #     output_nodes = [n.name for n in tf.get_default_graph().as_graph_def().node]
     #     gd = sess.graph.as_graph_def()
-    idx = 5
-    checkpoint_file_format = '{}/{}_{}.{}'
+    idx = ""
+    #checkpoint_file_format = '{}/{}_{}.{}'
+    checkpoint_file_format = '{}/{}{}.{}'
     #.format(checkpoints_dir,model_name,idx,suffix) # checkpoints_dir+"/"+model_name++str(0)+
     while os.path.isfile(checkpoint_file_format.format(checkpoints_dir,model_name,idx,"ckpt.meta")):
-        print(idx)
+        print("Yep")
         with tf.Session() as sess:
             saver = tf.train.import_meta_graph(checkpoint_file_format.format(checkpoints_dir,model_name,idx,"ckpt.meta")) #/tmp/model.ckpt.meta')
             saver.restore(sess, checkpoint_file_format.format(checkpoints_dir,model_name,idx,"ckpt"))
@@ -52,7 +53,8 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph):
             graph_io.write_graph(output_graph_def, output_graph, 'output_graph_{}.pb'.format(idx), as_text=False)
             # with tf.gfile.GFile(output_graph, "wb") as f:
             #     f.write(output_graph_def.SerializeToString())
-            idx+=1
+            #idx+=1
+            break
 
 import sys
 
@@ -70,3 +72,6 @@ def main():
 if __name__ == "__main__":
     main()
 
+# /cs/labs/guykatz/tomerel/vrl/pensieveWA/pensieve/test/models
+
+#p proj/scripts/load_and_freeze_checkpoints.py /cs/labs/guykatz/tomerel/vrl/pensieveWA/pensieve/test/models/ pretrain_linear_reward pensieveWA
