@@ -67,7 +67,7 @@ def k_test(filename,k, to_log_file=False):
     #     new_inputs_eps.append(eps)
 
     # latency gradient new inputs
-    new_intpus = []
+    new_inputs = []
     for i in range(k):
         new_intput = network.getNewVariable()
 
@@ -75,10 +75,10 @@ def k_test(filename,k, to_log_file=False):
         network.userDefineInputVars.append(new_intput)
 
         print("new input var = ", new_intput)
-        new_intpus.append(new_intput)
+        new_inputs.append(new_intput)
         eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
-        eq.addAddend(1, new_intput)
         eq.addAddend(-1, latency_gradient_eps[i])
+        eq.addAddend(1, new_intput)
         eq.setScalar(0)
         network.addEquation(eq)
 
@@ -88,10 +88,11 @@ def k_test(filename,k, to_log_file=False):
             # l = 0 - eps
             # u = 0 + eps
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
-            eq.addAddend(1, inputVars[i])
             new_input_idx = (i+j)%(k)
-            eq.addAddend(-1, new_intpus[new_input_idx])
-            print("var",inputVars[i], " = input"+str(new_input_idx))
+            eq.addAddend(-1, inputVars[i])
+            eq.addAddend(1, new_inputs[new_input_idx])
+            print("var",inputVars[i], " = input"+str(new_input_idx), "var idx = ", new_inputs[new_input_idx] )
+            print("something is Wrong")
             eq.setScalar(0)
             network.addEquation(eq)
 
