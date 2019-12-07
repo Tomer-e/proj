@@ -1,0 +1,9 @@
+
+Marabou:
+* 7/12 - Fix merege variables order dependency when one of them is input
+
+
+Pensieve:
+
+PCC:
+* check rate limits. <MIN_RATE == 40 MAX_RATE == 1000>. DONE.
