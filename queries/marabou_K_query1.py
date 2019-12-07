@@ -7,8 +7,11 @@ from tensorflow.python.saved_model import tag_constants
 
 
 def create_network(filename,k):
-    //  # TODO check again the input op
-    output_op_name = "model/split"
+    # TODO check again the input op
+    output_op_name = "model/pi/add"   # OUTPUT =  -11.130481
+    # output_op_name = "model/concat"   #  NODE 177 -11.130481
+    # output_op_name = "model/split"    #  NODE 176 -11.130481
+    # output_op_name = "model/add"        #  NODE 176 -11.130481
     input_op_names = ["input/Ob"]
     # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
     network = Marabou.read_tf_k_steps(filename, k,inputName=input_op_names,outputName=output_op_name) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
@@ -29,8 +32,8 @@ def k_test(filename,k, to_log_file=False):
     print("outputVars =", outputVars)
     print("outputVars len =", len(outputVars))
 
-    // # TODO return this assert
-    # assert (len(outputVars) == k)
+    # TODO return this assert
+    assert (len(outputVars) == k)
     print("network outputVars =", network.outputVars)
 
     # epsilon for bounding latency gradient (for each k)
@@ -60,7 +63,7 @@ def k_test(filename,k, to_log_file=False):
     for i in range(k):
         new_intput = network.getNewVariable()
 
-        # TODO: check if necessary
+        # TODO: check if necessary - necessary!
         network.userDefineInputVars.append(new_intput)
 
         print("new input var = ", new_intput)
@@ -89,6 +92,7 @@ def k_test(filename,k, to_log_file=False):
             # u = 1 + eps
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, inputVars[i])
+            network.userDefineInputVars.append(inputVars[i])
             eq.addAddend(-1, latency_ratio_eps)
             eq.setScalar(1)
             network.addEquation(eq)
@@ -96,11 +100,12 @@ def k_test(filename,k, to_log_file=False):
         for i in range(20, 30):
             l = 1
             u = 1
+            network.userDefineInputVars.append(inputVars[i])
             network.setUpperBound(inputVars[i], u)
             network.setLowerBound(inputVars[i], l)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], 0)
+        network.setLowerBound(outputVars[i], -1)  # FOR K-query - 0.01 (), for 1 - query, any example with minus will do.
         network.setUpperBound(outputVars[i], 0)
 
     print("\nMarabou results:\n")
@@ -115,7 +120,6 @@ def k_test(filename,k, to_log_file=False):
         print(vals)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-
 
 
 import sys

@@ -51,8 +51,8 @@ def basic_test(filename, to_log_file):
         # network.setLowerBound(inputVars[i],l)
         sanity_inputs.append(0)
         eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
-        eq.addAddend(1, inputVars[i])
-        eq.addAddend(-1, eps0)
+        eq.addAddend(1, eps0)
+        eq.addAddend(-1, inputVars[i])
         eq.setScalar(0)
         network.addEquation(eq)
 
@@ -77,7 +77,8 @@ def basic_test(filename, to_log_file):
         sanity_inputs.append((u+l)//2)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], 0)
+        network.setLowerBound(outputVars[i], -0.01) # as any minus will cause wrong behavior (will force, eventually
+        # converting to the MIN RATE)
         network.setUpperBound(outputVars[i], 0)
 
     sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))

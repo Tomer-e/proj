@@ -39,10 +39,10 @@ def basic_test(filename, to_log_file):
     eps0 = network.getNewVariable()
     eps1 = network.getNewVariable()
 
-    network.setLowerBound(eps0, 0   )
-    network.setUpperBound(eps0, 0)
+    network.setLowerBound(eps0, -0.01)
+    network.setUpperBound(eps0, 0.01)
     network.setLowerBound(eps1, 0)
-    network.setUpperBound(eps1, 0.00)
+    network.setUpperBound(eps1, 0.01)
     for i in range (0,10):
         # l = 0 - eps
         # u = 0 + eps
@@ -71,14 +71,14 @@ def basic_test(filename, to_log_file):
 
     for i in range(20, 30):
         l = 1.05
-        u = 10
+        u = 15
         network.setUpperBound(inputVars[i], u)
         network.setLowerBound(inputVars[i], l)
         sanity_inputs.append((u+l)//2)
 
     for i in range(len(outputVars)):
         network.setLowerBound(outputVars[i], 0)
-        network.setUpperBound(outputVars[i], 0)
+        network.setUpperBound(outputVars[i], 100)
 
     sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
 
