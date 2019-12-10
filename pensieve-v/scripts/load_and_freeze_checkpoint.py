@@ -26,6 +26,11 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph):
                     for index in range(len(node.input)):
                         if 'moving_' in node.input[index]:
                             node.input[index] = node.input[index] + '/read'
+                elif node.op == 'RefEnter':
+                    node.op = 'Enter'
+                    for index in range(len(node.input)):
+                        if 'moving_' in node.input[index]:
+                            node.input[index] = node.input[index] + '/read'
                 elif node.op == 'AssignSub':
                     node.op = 'Sub'
                     if 'use_locking' in node.attr: del node.attr['use_locking']
@@ -42,11 +47,24 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph):
                         node.input[0] = node.input[1]
                         del node.input[1]
 
+            whitelist_names = []
+            for node in gd.node:
+                if (node.name.startswith('InceptionResnet') or node.name.startswith('embeddings') or
+                        node.name.startswith('image_batch') or node.name.startswith('label_batch') or
+                        node.name.startswith('phase_train') or node.name.startswith('Logits')):
+                    whitelist_names.append(node.name)
+
+            # Replace all the variables in the graph with constants of the same values
             output_graph_def = tf.graph_util.convert_variables_to_constants(
-                sess,  # The session is used to retrieve the weights
-                gd,
-                output_nodes  # The output node names are used to select the usefull nodes
-            )
+                sess, gd, output_nodes,variable_names_whitelist=whitelist_names)
+
+
+
+            # output_graph_def = tf.graph_util.convert_variables_to_constants(
+            #     sess,  # The session is used to retrieve the weights
+            #     gd,
+            #     output_nodes  # The output node names are used to select the usefull nodes
+            # )
             # Finally we serialize and dump the output graph to the filesystem
             # print(output_nodes[-1])
 
@@ -72,6 +90,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# /cs/labs/guykatz/tomerel/vrl/pensieveWA/pensieve/test/models
 
-#p proj/scripts/load_and_freeze_checkpoints.py /cs/labs/guykatz/tomerel/vrl/pensieveWA/pensieve/test/models/ pretrain_linear_reward pensieveWA
