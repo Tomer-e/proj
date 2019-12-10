@@ -4,6 +4,6 @@ Marabou:
 
 
 Pensieve:
-
+* discover the inputs/outputs
 PCC:
 * check rate limits. <MIN_RATE == 40 MAX_RATE == 1000>. DONE.
