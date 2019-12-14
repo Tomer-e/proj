@@ -47,28 +47,23 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph):
                         node.input[0] = node.input[1]
                         del node.input[1]
 
-            whitelist_names = []
-            for node in gd.node:
-                if (node.name.startswith('InceptionResnet') or node.name.startswith('embeddings') or
-                        node.name.startswith('image_batch') or node.name.startswith('label_batch') or
-                        node.name.startswith('phase_train') or node.name.startswith('Logits')):
-                    whitelist_names.append(node.name)
+            # whitelist_names = []
+            # for node in gd.node:
+            #     if (node.name.startswith('InceptionResnet') or node.name.startswith('embeddings') or
+            #             node.name.startswith('image_batch') or node.name.startswith('label_batch') or
+            #             node.name.startswith('phase_train') or node.name.startswith('Logits')):
+            #         whitelist_names.append(node.name)
 
-            # Replace all the variables in the graph with constants of the same values
             output_graph_def = tf.graph_util.convert_variables_to_constants(
-                sess, gd, output_nodes,variable_names_whitelist=whitelist_names)
-
-
-
-            # output_graph_def = tf.graph_util.convert_variables_to_constants(
-            #     sess,  # The session is used to retrieve the weights
-            #     gd,
-            #     output_nodes  # The output node names are used to select the usefull nodes
-            # )
+                sess,  # The session is used to retrieve the weights
+                gd,
+                # output_nodes  # The output node names are used to select the usefull nodes
+                'add_1'.split(",")  # The output node names are used to select the usefull nodes
+            )
             # Finally we serialize and dump the output graph to the filesystem
             # print(output_nodes[-1])
 
-            graph_io.write_graph(output_graph_def, output_graph, 'output_graph.pbtxt'.format(idx), as_text=True)
+            graph_io.write_graph(output_graph_def, output_graph, 'output_graph.pb'.format(idx), as_text=False)
             # with tf.gfile.GFile(output_graph, "wb") as f:
             #     f.write(output_graph_def.SerializeToString())
             #idx+=1
