@@ -7,11 +7,15 @@ from tensorflow.python.saved_model import tag_constants
 
 
 def create_network(filename):
-    output_op_name = "actor/FullyConnected_4/Softmax"
+    # output_op_name = "actor/FullyConnected_4/Softmax"
     # input_op_names = ["actor/InputData/X"]
-    input_op_names = ["actor/strided_slice/stack", "actor/strided_slice_1/stack","actor/strided_slice_2/stack"
-        ,"actor/strided_slice_3/stack","actor/strided_slice_4/stack","actor/strided_slice_5/stack"]
-    # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
+    # input_op_names = ["actor/strided_slice/stack", "actor/strided_slice_1/stack","actor/strided_slice_2/stack"
+    #     ,"actor/strided_slice_3/stack","actor/strided_slice_4/stack","actor/strided_slice_5/stack"]
+    # output_op_name = "actor/FullyConnected/MatMul"
+
+    input_op_names = ["actor/strided_slice_2"]#, "actor/strided_slice_1","actor/strided_slice_2","actor/strided_slice_3","actor/strided_slice_4","actor/strided_slice_5"]
+    output_op_name = "actor/Flatten/Reshape"# "add"
+
     network = Marabou.read_tf(filename, inputName=input_op_names,outputName=output_op_name)
     return network, input_op_names, output_op_name
 
