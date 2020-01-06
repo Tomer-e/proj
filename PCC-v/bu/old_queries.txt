@@ -1,0 +1,11 @@
+\medskip\noindent{\bf safety basic query 3}
+
+0-9 latency gradiant, all inputs are equal and  $\in [-0.01,0.01]$
+
+10-19 latency ratio latency ratio $\in [1,1.01]$
+
+20-29: sending ratio $\ge 1.05$
+
+output $\ge 0 $
+
+results:  UNSAT for sending ratio $\leq 20$, sending ratio $> 20$ is not relevant

@@ -1,0 +1,41 @@
+ _____  ______  _____ _    _ _   _______ _____
+|  __ \|  ____|/ ____| |  | | | |__   __/ ____|
+| |__) | |__  | (___ | |  | | |    | | | (___
+|  _  /|  __|  \___ \| |  | | |    | |  \___ \
+| | \ \| |____ ____) | |__| | |____| |  ____) |
+|_|  \_\______|_____/ \____/|______|_| |_____/
+============== query1 ==============
+-0.01<=latency_gradient<= 0.01, 1<=latency_ratio_indices<=1.01, sending_ratio_indices = 1
+-10<=output<=0
+marabou solve run result: SAT 
+input var #0 = -0.01
+input var #1 = 1.0
+input var #2 = 1.0
+input var #3 = -0.01
+input var #4 = 1.0
+input var #5 = 1.0
+input var #6 = -0.01
+input var #7 = 1.0
+input var #8 = 1.0
+input var #9 = -0.01
+input var #10 = 1.0
+input var #11 = 1.0
+input var #12 = -0.01
+input var #13 = 1.0
+input var #14 = 1.0
+input var #15 = -0.01
+input var #16 = 1.0
+input var #17 = 1.0
+input var #18 = -0.01
+input var #19 = 1.0
+input var #20 = 1.0
+input var #21 = -0.01
+input var #22 = 1.0
+input var #23 = 1.0
+input var #24 = -0.01
+input var #25 = 1.0
+input var #26 = 1.0
+input var #27 = -0.01
+input var #28 = 1.0
+input var #29 = 1.0
+output var #30 = -0.9254632706499052
