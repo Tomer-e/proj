@@ -40,7 +40,7 @@ def evaluateNetwork( pbFileName ,inputValues,inputNames, outputName):
     for i in inputNames:
         inputOps.append(mySess.graph.get_operation_by_name(i))
     shapeMap = genShapeMap(inputOps)
-    print("Evaluating network")
+    # print("Evaluating network")
     inputValuesReshaped = []
     for j in range(len(inputOps)):
         inputOp = inputOps[j]

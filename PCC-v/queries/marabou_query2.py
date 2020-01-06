@@ -71,7 +71,7 @@ def basic_test(filename, to_log_file):
 
     for i in range(20, 30):
         l = 1.05
-        u = 15
+        u = 20
         network.setUpperBound(inputVars[i], u)
         network.setLowerBound(inputVars[i], l)
         sanity_inputs.append((u+l)//2)

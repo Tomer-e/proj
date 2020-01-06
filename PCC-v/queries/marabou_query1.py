@@ -7,9 +7,23 @@ from tensorflow.python.saved_model import tag_constants
 
 
 def create_network(filename):
-    output_op_name = "model/pi/add"
+    output_op_name = "output/Shape"
     input_op_names = ["input/Ob"]
     # read_tf(filename, inputName=None, outputName=None, savedModel=False, savedModelTags=[]):
+    sanity_inputs = [0. ,        1.,         1.06896552 ,0. ,        1.  ,       1.01694915,
+     0.,         1.,         1.01694915, 0.,         1. ,        1.03508772,
+     0.,         1.,         1.09090909 ,0.,         1.,         1.07142857,
+     0.,         1.,         1.03389831, 0.,         1.,         1.,
+     0. ,        1. ,        1.01666667 ,0.,         1. ,        1.07017544]
+
+
+
+    print("my inputs:", sanity_inputs)
+
+    sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
+    print( "EXPECTED OUTPUT IS ONE OF :  [0.035300, 0.004130,  -0.001897] ")
+    print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
+    exit (0)
     network = Marabou.read_tf(filename, inputName=input_op_names,outputName=output_op_name) #,savedModel = True,outputName = "save_1/restore_all", savedModelTags=[tag_constants.SERVING] )
     return network, input_op_names, output_op_name
 
@@ -77,9 +91,17 @@ def basic_test(filename, to_log_file):
         sanity_inputs.append((u+l)//2)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], -0.01) # as any minus will cause wrong behavior (will force, eventually
+        network.setLowerBound(outputVars[i], -100) # as any minus will cause wrong behavior (will force, eventually
         # converting to the MIN RATE)
         network.setUpperBound(outputVars[i], 0)
+
+    sanity_inputs = [0. ,        1.,         1.06896552 ,0. ,        1.  ,       1.01694915,
+     0.,         1.,         1.01694915, 0.,         1. ,        1.03508772,
+     0.,         1.,         1.09090909 ,0.,         1.,         1.07142857,
+     0.,         1.,         1.03389831, 0.,         1.,         1.,
+     0. ,        1. ,        1.01666667 ,0.,         1. ,        1.07017544]
+
+    print( "EXPECTED OUTPUT IS ONE OF :  [0.035300, 0.004130,  -0.001897] ")
 
     sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
 
@@ -89,6 +111,7 @@ def basic_test(filename, to_log_file):
     # print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
 
     print("\nMarabou results:\n")
+
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver

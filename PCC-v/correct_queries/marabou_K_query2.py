@@ -114,6 +114,7 @@ def k_test(filename,k, to_log_file=False):
         network.setLowerBound(outputVars[i], 0)
         network.setUpperBound(outputVars[i], 100)
 
+    query_info = ""
     print("\nMarabou results:\n")
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
@@ -126,6 +127,8 @@ def k_test(filename,k, to_log_file=False):
         print(vals)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+
+    utils.write_results_to_file(vals,inputVars, outputVars, "K-query2",query_info,".")
 
 
 import sys

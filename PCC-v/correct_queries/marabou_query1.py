@@ -3,7 +3,7 @@ from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
-
+import utils
 
 
 def create_network(filename):
@@ -48,6 +48,8 @@ def basic_test(filename, to_log_file):
     latency_ratio_indices = [i+1 for i in range (0,len(inputVars),3)]
     sending_ratio_indices = [i+2 for i in range (0,len(inputVars),3)]
 
+
+
     for i in latency_gradient_indices:
         # l = 0 - eps
         # u = 0 + eps
@@ -86,11 +88,12 @@ def basic_test(filename, to_log_file):
         # converging to the MIN RATE)
         network.setUpperBound(outputVars[i], 0)
 
-    sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
+    query_info = "-0.01<=latency_gradient<= 0.01, 1<=latency_ratio_indices<=1.01, sending_ratio_indices = 1\n-10<=output<=0"
+    # sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
 
-    print("my inputs:", sanity_inputs)
+    # print("my inputs:", sanity_inputs)
 
-    print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
+    # print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
     # print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
 
     print("\nMarabou results:\n")
@@ -107,6 +110,9 @@ def basic_test(filename, to_log_file):
         print(vals)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+
+    utils.write_results_to_file(vals,inputVars, outputVars, "query1",query_info,".")
+
 
 
 

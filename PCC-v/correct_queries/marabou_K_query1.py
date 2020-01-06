@@ -3,7 +3,7 @@ from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
-
+import utils
 
 
 def create_network(filename,k):
@@ -32,7 +32,6 @@ def k_test(filename,k, to_log_file=False):
     print("outputVars =", outputVars)
     print("outputVars len =", len(outputVars))
 
-    # TODO return this assert
     assert (len(outputVars) == k)
     print("network outputVars =", network.outputVars)
 
@@ -40,15 +39,15 @@ def k_test(filename,k, to_log_file=False):
     latency_gradient_eps = []
     for i in range(k):
         eps = network.getNewVariable()
-        network.setLowerBound(eps, -0.01)
-        network.setUpperBound(eps, 0.01)
+        network.setLowerBound(eps, -0.02)
+        network.setUpperBound(eps, 0.02)
         latency_gradient_eps.append(eps)
 
     # epsilon for bounding latency ratio
     latency_ratio_eps = network.getNewVariable()
 
-    network.setLowerBound(latency_ratio_eps, 0)
-    network.setUpperBound(latency_ratio_eps, 0.01)
+    network.setLowerBound(latency_ratio_eps, 1)
+    network.setUpperBound(latency_ratio_eps, 1.02)
 
     # # epsilon for separating inputs
     # new_inputs_eps = []
@@ -71,6 +70,8 @@ def k_test(filename,k, to_log_file=False):
         eq.addAddend(1, new_intput)
         eq.setScalar(0)
         network.addEquation(eq)
+
+    b = 0
     for j in range(k):
         inputVars = network.inputVars[j][0]
         latency_gradient_indices = [i for i in range(0, len(inputVars), 3)]
@@ -80,12 +81,13 @@ def k_test(filename,k, to_log_file=False):
             # l = 0 - eps
             # u = 0 + eps
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
-            new_input_idx = (i+j)%(k)
+            new_input_idx = (b+j)%(k)
             eq.addAddend(-1, inputVars[i])
             eq.addAddend(1, new_inputs[new_input_idx])
             print("var",inputVars[i], " = input"+str(new_input_idx), "var idx = ", new_inputs[new_input_idx] )
             eq.setScalar(0)
             network.addEquation(eq)
+            b+=1
 
         for i in latency_ratio_indices:
             # l = 1
@@ -94,7 +96,7 @@ def k_test(filename,k, to_log_file=False):
             eq.addAddend(1, inputVars[i])
             network.userDefineInputVars.append(inputVars[i])
             eq.addAddend(-1, latency_ratio_eps)
-            eq.setScalar(1)
+            eq.setScalar(0)
             network.addEquation(eq)
 
         for i in sending_ratio_indices:
@@ -105,8 +107,11 @@ def k_test(filename,k, to_log_file=False):
             network.setLowerBound(inputVars[i], l)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], 0)  # FOR K-query - 0.01 (), for 1 - query, any example with minus will do.
-        network.setUpperBound(outputVars[i], 0)
+        network.setLowerBound(outputVars[i], -0.05)  # FOR K-query - 0.01 (), for 1 - query, any example with minus will do.
+        network.setUpperBound(outputVars[i], 0.05)
+
+    query_info = "-0.02<=latency_gradient<= 0.02, 1<=latency_ratio_indices<=1.02, sending_ratio_indices = 1\n" \
+                 "output=0 (with a little error)"
 
     print("\nMarabou results:\n")
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
@@ -120,6 +125,8 @@ def k_test(filename,k, to_log_file=False):
         print(vals)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+
+    utils.write_results_to_file(vals,inputVars, outputVars, "K-query1",query_info,".",k)
 
 
 import sys

@@ -3,6 +3,7 @@ from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
+import utils
 
 
 
@@ -86,13 +87,15 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(outputVars[i], 0)
         network.setUpperBound(outputVars[i], 0)
 
-    sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
+    # sanity_inputs = np.asanyarray(sanity_inputs).reshape ((1,30))
 
-    print("my inputs:", sanity_inputs)
+    # print("my inputs:", sanity_inputs)
 
-    print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
+    # print("network output for my inputs(MY):", evaluateNetwork(filename, sanity_inputs, input_op_names, output_op_name))
     # print ("network output for my inputs(func BY MARABOU):",network.My_evaluateWithoutMarabou([sanity_inputs],output_op_name))
 
+    query_info = "-0.01<=latency_gradient<= 0.01, 1<=latency_ratio_indices<=1.01, sending_ratio_indices >= 1.05" \
+                 "\noutput = 0 "
     print("\nMarabou results:\n")
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
@@ -107,6 +110,7 @@ def basic_test(filename, to_log_file):
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
+    utils.write_results_to_file(vals,inputVars, outputVars, "query2",query_info,".")
 
 
 
