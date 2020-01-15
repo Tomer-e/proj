@@ -6,7 +6,7 @@ def write_results_to_file (vals, input_vars , output_vars, query_name, info = " 
 
     if k>0:
         query_name+=("_k"+str(k))
-    path = dir+"/results/"+query_name+".rslt"
+    path = dir+"/dnc_results/"+query_name+".rslt"
 
     with open(path, 'w') as out:
         out.write(" _____  ______  _____ _    _ _   _______ _____"+os.linesep)
