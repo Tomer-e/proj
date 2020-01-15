@@ -50,7 +50,7 @@ def k_test(filename,k, to_log_file=False):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         network.setLowerBound(eps, 1.05)
-        network.setUpperBound(eps, 100)
+        network.setUpperBound(eps, 20)
         sending_ratio_eps.append(eps)
 
     # sending ratio new inputs
@@ -122,7 +122,7 @@ def k_test(filename,k, to_log_file=False):
 
     for i in range(len(outputVars)):
         network.setLowerBound(outputVars[i], -0.05)
-        network.setUpperBound(outputVars[i], 1000)
+        network.setUpperBound(outputVars[i], 100)
 
     query_info = "-0.02<=latency_gradient<= 0.02, 1<=latency_ratio_indices<=1.02, sending_ratio_indices = 1\n" \
                  "output>=0"
@@ -139,11 +139,13 @@ def k_test(filename,k, to_log_file=False):
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
     if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+        options = Marabou.createOptions(numWorkers=8,dnc=True)
+        vals, stats = network.solve("results/vrl_marabou.log",verbose=False, options = options)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
     else:
-        vals, stats = network.solve(verbose=True)
+        options = Marabou.createOptions(numWorkers=8,dnc=True)
+        vals, stats = network.solve("results/vrl_marabou.log",verbose=False, options = options)
         print(vals)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
