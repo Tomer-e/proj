@@ -38,7 +38,7 @@ def frozen_graph_maker(export_dir,output_graph):
         # print(output_nodes[-1])
 	
 	
-        graph_io.write_graph(output_graph_def, output_graph, 'output_graph.pbtxt', as_text=False)
+        graph_io.write_graph(output_graph_def, output_graph, 'output_graph.pb', as_text=False)
         # with tf.gfile.GFile(output_graph, "wb") as f:
         #     f.write(output_graph_def.SerializeToString())
 
