@@ -1,7 +1,7 @@
 
 Marabou:
 * 7/12 - Fix merege variables order dependency when one of them is input
-
+* 12/1 - Make StridedSlice work for all inputs.
 
 Pensieve:
 * discover the inputs/outputs
