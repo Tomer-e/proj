@@ -44,6 +44,7 @@ def basic_test(filename, to_log_file):
 
     outputVars = network.outputVars[0]
     print("inputVars len =", len(inputVars))
+    print("network.inputVars", network.inputVars)
     print("outputVars len =", len(outputVars))
     print("outputVars =", outputVars)
     print("network outputVars =", network.outputVars)
@@ -111,6 +112,8 @@ def basic_test(filename, to_log_file):
     # last_chunk_bit_rate, current_buffer_size, past_chunk_throughput, past_chunk_download_time, next_chunk_sizes, number_of_chunks_left
 
     unsused_inputs = all_inputs - used_inputs
+    print ("all inputs",all_inputs)
+    print ("used inputs", used_inputs)
     print ("unused inputs", unsused_inputs)
     for var in unsused_inputs:
         l = 0
@@ -121,28 +124,28 @@ def basic_test(filename, to_log_file):
     # last_chunk_bit_rate
     for var in last_chunk_bit_rate:
         l = 1
-        u = 1000
+        u = 2
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
     # current_buffer_size
     for var in current_buffer_size:
         l = 1
-        u = 1000
+        u = 2
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
     # past_chunk_throughput
     for var in past_chunk_throughput:
         l = 1
-        u = 1000
+        u = 2
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
     # past_chunk_download_time
     for var in past_chunk_download_time:
         l = 1
-        u = 1000
+        u = 2
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
@@ -156,14 +159,15 @@ def basic_test(filename, to_log_file):
     # number_of_chunks_left
     for var in number_of_chunks_left:
         l = 1
-        u = 1000
+        u = 2
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], 0)
+        network.setLowerBound(outputVars[i], -10000)
         network.setUpperBound(outputVars[i], 100000)
 
+    # return
     print("\nMarabou results:\n")
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
