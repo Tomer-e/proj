@@ -51,8 +51,8 @@ def basic_test(filename, to_log_file):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         # 0-4 SECONDS
-        network.setLowerBound(eps, 1)
-        network.setUpperBound(eps, 4)
+        network.setLowerBound(eps, 4)
+        network.setUpperBound(eps, 1e9)
         past_chunk_download_time_eps.append(eps)
 
     past_chunk_throughput_eps = []
@@ -60,7 +60,7 @@ def basic_test(filename, to_log_file):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         network.setLowerBound(eps, 0) # TODO
-        network.setUpperBound(eps, 1e9) # TODO
+        network.setUpperBound(eps, 5000) # TODO
         past_chunk_throughput_eps.append(eps)
 
     for var in unused_inputs:
@@ -73,15 +73,15 @@ def basic_test(filename, to_log_file):
 
         # last_chunk_bit_rate
         for var in last_chunk_bit_rate[j]:
-            l = utils.VIDEO_BIT_RATE[-1] # Highest definition // TODO - check what is expected (index vs the bit rate vs something else)
-            u = utils.VIDEO_BIT_RATE[-1] # Highest definition // TODO - check what is expected (index vs the bit rate vs something else)
+            l = utils.VIDEO_BIT_RATE[0] # Lowest definition // TODO - check what is expected (index vs the bit rate vs something else)
+            u = utils.VIDEO_BIT_RATE[0] # Lowest definition// TODO - check what is expected (index vs the bit rate vs something else)
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # current_buffer_size
         for var in current_buffer_size[j]:
-            l = 100 # TODO : %?
-            u = 150 # TODO : %?
+            l = 0 # TODO : %? //almost empty
+            u = 4 # TODO : %?
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -121,7 +121,7 @@ def basic_test(filename, to_log_file):
         # number_of_chunks_left
         for var in number_of_chunks_left[j]:
             l = 1 # only one chunk left to play
-            u = 1 # only one chunk left to play
+            u = 48 # only one chunk left to play
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -131,7 +131,7 @@ def basic_test(filename, to_log_file):
 
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
     eq.addAddend(1, outputVars[0])
-    eq.addAddend(-1, outputVars[5])
+    eq.addAddend(-1, outputVars[1])
     eq.setScalar(0)
     network.addEquation(eq)
 
@@ -178,8 +178,6 @@ def basic_test(filename, to_log_file):
                 print("number_of_chunks_left:")
                 for var in number_of_chunks_left[j]:
                     print("var", var, " = ", vals[var])
-
-
 
 
 
