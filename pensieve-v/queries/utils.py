@@ -15,7 +15,7 @@ VIDEO_BIT_RATE = [300,750,1200,1850,2850,4300]
 # # state = np.roll(state, -1, axis=1)[0]
 # # state[0, -1] = 1 # VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))  # last quality                 # Last chunk bit rate -      [1]  l~t
 # # state[1, -1] = 2 # buffer_size / BUFFER_NORM_FACTOR  # 10 sec #                                             # Current buffer size -      [1]  b~t
-# # state[2, -1] = 3 # float(video_chunk_size) / float(delay) / M_IN_K  # kilo byte / ms                        # Past chunk throughput -    [k]  x~t
+# # state[2, -1] = 3 # float(video_chunk_size) / float(delay) / M_IN_K  # kilo byte / s                        # Past chunk throughput -    [k]  x~t
 # # state[3, -1] = 4 #float(delay) / M_IN_K / BUFFER_NORM_FACTOR  # 10 sec                                      # Past chunk download time - [k]  τ~t
 # # state[4, :A_DIM] = 5 # np.array(next_video_chunk_sizes) / M_IN_K / M_IN_K  # mega byte                      # Next chunk sizes -         [m]  n~t
 # # state[5, -1] = 6 #np.minimum(video_chunk_remain, CHUNK_TIL_VIDEO_END_CAP) / float(CHUNK_TIL_VIDEO_END_CAP)  # Number of chunks left      [1]  c~t

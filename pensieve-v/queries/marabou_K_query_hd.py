@@ -1,29 +1,18 @@
-
+import sys
 from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
+import utils
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
-import utils
-import warnings
-warnings.filterwarnings('ignore')
 
 
 
-
-def create_network(filename):
-    # output_op_name = "actor/FullyConnected_4/Softmax"
-    # input_op_names = ["actor/InputData/X"]
-    # input_op_names = ["actor/strided_slice/stack", "actor/strided_slice_1/stack","actor/strided_slice_2/stack"
-    #     ,"actor/strided_slice_3/stack","actor/strided_slice_4/stack","actor/strided_slice_5/stack"]
-    # output_op_name = "actor/FullyConnected/MatMul"
-
-
-    input_op_names = ["actor/InputData/X"]#, "actor/strided_slice_1","actor/strided_slice_2","actor/strided_slice_3","actor/strided_slice_4","actor/strided_slice_5"]
-    # output_op_name = "add"
+def create_network(filename,k):
+    # TODO check again the input op
+    input_op_names = ["actor/InputData/X"]
     output_op_name = "actor/FullyConnected_4/BiasAdd"
-    # output_op_name = "critic/FullyConnected_4/BiasAdd"
 
-    network = Marabou.read_tf(filename, inputName=input_op_names,outputName=output_op_name)
+    network = Marabou.read_tf_k_steps(filename, k,inputName=input_op_names,outputName=output_op_name)
     return network, input_op_names, output_op_name
 
 # Network inputs:
@@ -34,33 +23,29 @@ def create_network(filename):
 # c~t is the number of chunks remaining in the video;
 # l~t is the bitrate at which the last chunk was downloaded.
 
-def basic_test(filename, to_log_file):
-    k = 1
-    assert (k == 1) # basic query
-    network,input_op_names, output_op_name = create_network(filename)
-
+def k_test(filename,k, to_log_file=False):
+    network, input_op_names, output_op_name = create_network(filename,k)
     inputVars = network.inputVars
-    outputVars = network.outputVars[0]
+    outputVars = network.outputVars
 
     all_inputs, used_inputs, unused_inputs, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput, \
     past_chunk_download_time, next_chunk_sizes, number_of_chunks_left = utils.prep_input_for_query(inputVars, k)
-
 
     past_chunk_download_time_eps = []
     for j in range(k):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         # 0-4 SECONDS
-        network.setLowerBound(eps, 1)
-        network.setUpperBound(eps, 4)
+        network.setLowerBound(eps, 0.001)
+        network.setUpperBound(eps, 0.4)  # max : 4s
         past_chunk_download_time_eps.append(eps)
 
     past_chunk_throughput_eps = []
     for j in range(k):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
-        network.setLowerBound(eps, 0) # TODO
-        network.setUpperBound(eps, 1e9) # TODO
+        network.setLowerBound(eps, 0.5)  # min throughput (for delay of 4s)
+        network.setUpperBound(eps, 5)  #
         past_chunk_throughput_eps.append(eps)
 
     for var in unused_inputs:
@@ -69,59 +54,76 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(var, l)
         network.setUpperBound(var, u)
 
-    for j in range (k):
+    for j in range(k):
 
         # last_chunk_bit_rate
+        # one of VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))
         for var in last_chunk_bit_rate[j]:
-            l = utils.VIDEO_BIT_RATE[-1] # Highest definition // TODO - check what is expected (index vs the bit rate vs something else)
-            u = utils.VIDEO_BIT_RATE[-1] # Highest definition // TODO - check what is expected (index vs the bit rate vs something else)
+            l = 1  # Highest definition // 4300/4300
+            u = 1  # Highest definition //
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # current_buffer_size
         for var in current_buffer_size[j]:
-            l = 100 # TODO : %?
-            u = 150 # TODO : %?
+            l = 0.4  # 4 seconds
+            u = 19  # 190 seconds ~= 48 *4
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # past_chunk_throughput
+        i = 0
+        a = [0, 0, 0, 0, 0, 0, 0, 0]
         for var in past_chunk_throughput[j]:
             # l = ? //TODO
             # u = ? //TODO
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(-1, var)
-            eq.addAddend(1, past_chunk_throughput_eps[j])
+            if i>=(k-j):
+                eq.addAddend(1, past_chunk_throughput_eps[j])
+            else:
+                eq.addAddend(0, 0) # 0
             eq.setScalar(0)
             network.addEquation(eq)
 
         # past_chunk_download_time
+        i=0
+        a = [0,0,0,0,0,0,0,0]
         for var in past_chunk_download_time[j]:
-            # l = 0
-            # u = 4
+            # l = 0.1
+            # u = 40 => 4s
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(-1, var)
-            eq.addAddend(1, past_chunk_download_time_eps[j])
+            if i>=(k-j)-1:
+                eq.addAddend(1, past_chunk_download_time_eps[j])
+                a [i] = 1
+            else:
+                eq.addAddend(0, 0) # 0
             eq.setScalar(0)
             network.addEquation(eq)
+            i+=1
+        print("past_chunk_download_time")
+        print(a)
 
         # next_chunk_sizes
-        # size_i = 0
-        assert len (next_chunk_sizes[j]) == len (utils.VIDEO_BIT_RATE)
+        size_i = 0
+        basic_size = 2 / utils.VIDEO_BIT_RATE[-1]  # =0.00046511627906976747 # 2 MB in HD, 4300 bps
+        sizes = [basic_size * bitrate for bitrate in utils.VIDEO_BIT_RATE]
+        assert len(next_chunk_sizes[j]) == len(utils.VIDEO_BIT_RATE)
         for var in next_chunk_sizes[j]:
             # All sizes
             # chunk_size = utils.VIDEO_BIT_RATE[size_i]
             # print("chunk_size", chunk_size)
-            l = 1  #chunk_size //TODO - check, for now considered as mask (1 => available)
-            u = 1  #chunk_size
+            l = sizes[size_i]  # chunk_size
+            u = sizes[size_i]  # chunk_size
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
-            # size_i +=1
+            size_i += 1
 
         # number_of_chunks_left
         for var in number_of_chunks_left[j]:
-            l = 1 # only one chunk left to play
-            u = 1 # only one chunk left to play
+            l = (k-j) / k+1
+            u = (k-j) / k+1
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -129,8 +131,9 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(outputVars[j], -1e9)
         network.setUpperBound(outputVars[j], 1e9)
 
+    # SD > HD
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[0])
+    eq.addAddend(1, outputVars[4])
     eq.addAddend(-1, outputVars[5])
     eq.setScalar(0)
     network.addEquation(eq)
@@ -140,14 +143,14 @@ def basic_test(filename, to_log_file):
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
     if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+        vals, stats = network.solve("results/vrl_marabou.log", verbose=False)
         print('marabou solve run result: {} '.format(
             'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
     else:
         vals, stats = network.solve(verbose=True)
         # print(vals)
-        print("all_inputs = ",all_inputs)
-        print("used_inputs = ",used_inputs)
+        print("all_inputs = ", all_inputs)
+        print("used_inputs = ", used_inputs)
 
         result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
         print('marabou solve run result: {} '.format(result))
@@ -179,27 +182,19 @@ def basic_test(filename, to_log_file):
                 for var in number_of_chunks_left[j]:
                     print("var", var, " = ", vals[var])
 
-
-
-
-
 import sys
 
 def main():
 
     if len(sys.argv) not in [2,3]:
-        print("usage:",sys.argv[0], "<pb_filename> [-l]")
+        print("usage:",sys.argv[0], "<pb_filename> [k] ")
         exit(0)
-
     filename = sys.argv[1]
-    print("=========================-basic_test-=========================")
-    basic_test(filename, len(sys.argv) == 3)
-
-
-
-
-
-
+    if (len(sys.argv) == 2):
+        k_test(filename,1,False)
+    if (len(sys.argv) == 3):
+        k = int(sys.argv[2])
+        k_test(filename,k,False)
 
 if __name__ == "__main__":
     main()

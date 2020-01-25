@@ -36,7 +36,6 @@ def create_network(filename):
 
 def basic_test(filename, to_log_file):
     k = 1
-    assert (k == 1) # basic query
     network,input_op_names, output_op_name = create_network(filename)
 
     inputVars = network.inputVars
@@ -51,16 +50,16 @@ def basic_test(filename, to_log_file):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         # 0-4 SECONDS
-        network.setLowerBound(eps, 4)
-        network.setUpperBound(eps, 1e9)
+        network.setLowerBound(eps, 0.4) # min : 4 sec
+        network.setUpperBound(eps, 1.90) # max : 190 sec (=~4*48 sec)
         past_chunk_download_time_eps.append(eps)
 
     past_chunk_throughput_eps = []
     for j in range(k):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
-        network.setLowerBound(eps, 0) # TODO
-        network.setUpperBound(eps, 5000) # TODO
+        network.setLowerBound(eps, 0)
+        network.setUpperBound(eps,0.03488372093023256 ) # max throughput (for delay of 4s)
         past_chunk_throughput_eps.append(eps)
 
     for var in unused_inputs:
@@ -72,16 +71,18 @@ def basic_test(filename, to_log_file):
     for j in range (k):
 
         # last_chunk_bit_rate
+        # one of VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))
         for var in last_chunk_bit_rate[j]:
-            l = utils.VIDEO_BIT_RATE[0] # Lowest definition // TODO - check what is expected (index vs the bit rate vs something else)
-            u = utils.VIDEO_BIT_RATE[0] # Lowest definition// TODO - check what is expected (index vs the bit rate vs something else)
+            l = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # lowest definition // 300/4300
+            u = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # lowest definition // 300/4300
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # current_buffer_size
+        # almost empty, less then one chunk
         for var in current_buffer_size[j]:
-            l = 0 # TODO : %? //almost empty
-            u = 4 # TODO : %?
+            l = 0    #
+            u = 0.4  # 4 seconds
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -97,8 +98,8 @@ def basic_test(filename, to_log_file):
 
         # past_chunk_download_time
         for var in past_chunk_download_time[j]:
-            # l = 0
-            # u = 4
+            # l = 40 => 4s
+            # u = 190 => 19s
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(-1, var)
             eq.addAddend(1, past_chunk_download_time_eps[j])
@@ -106,22 +107,24 @@ def basic_test(filename, to_log_file):
             network.addEquation(eq)
 
         # next_chunk_sizes
-        # size_i = 0
+        size_i = 0
+        basic_size = 2/4300 # =0.00046511627906976747 # 2 MB in 4300 bps
+        sizes = [basic_size * bitrate for bitrate in utils.VIDEO_BIT_RATE]
         assert len (next_chunk_sizes[j]) == len (utils.VIDEO_BIT_RATE)
         for var in next_chunk_sizes[j]:
             # All sizes
             # chunk_size = utils.VIDEO_BIT_RATE[size_i]
             # print("chunk_size", chunk_size)
-            l = 1  #chunk_size //TODO - check, for now considered as mask (1 => available)
-            u = 1  #chunk_size
+            l = sizes[size_i]  # chunk_size
+            u = sizes[size_i]  # chunk_size
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
-            # size_i +=1
+            size_i +=1
 
         # number_of_chunks_left
         for var in number_of_chunks_left[j]:
-            l = 1 # only one chunk left to play
-            u = 48 # only one chunk left to play
+            l = 1/48 # only one chunk left to play
+            u = 1/48 # only one chunk left to play
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -130,8 +133,8 @@ def basic_test(filename, to_log_file):
         network.setUpperBound(outputVars[j], 1e9)
 
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[0])
-    eq.addAddend(-1, outputVars[1])
+    eq.addAddend(1, outputVars[-1])
+    eq.addAddend(-1, outputVars[0])
     eq.setScalar(0)
     network.addEquation(eq)
 
@@ -180,7 +183,6 @@ def basic_test(filename, to_log_file):
                     print("var", var, " = ", vals[var])
 
 
-
 import sys
 
 def main():
@@ -192,10 +194,6 @@ def main():
     filename = sys.argv[1]
     print("=========================-basic_test-=========================")
     basic_test(filename, len(sys.argv) == 3)
-
-
-
-
 
 
 

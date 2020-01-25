@@ -88,15 +88,15 @@ def k_test(filename,k, to_log_file=False):
 
         # past_chunk_throughput
         for var in past_chunk_throughput[i]:
-            l = 1
-            u = 2
+            l = 0.5
+            u = 0.5
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # past_chunk_download_time
         for var in past_chunk_download_time[i]:
-            l = 1
-            u = 2
+            l = 0.05
+            u = 0.05
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -110,7 +110,7 @@ def k_test(filename,k, to_log_file=False):
         # number_of_chunks_left
         for var in number_of_chunks_left[i]:
             l = 1
-            u = 2
+            u = 1
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
