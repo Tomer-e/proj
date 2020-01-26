@@ -133,7 +133,7 @@ def basic_test(filename, to_log_file):
 
     # SD > HD
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[0])
+    eq.addAddend(1, outputVars[3])
     eq.addAddend(-1, outputVars[5])
     eq.setScalar(0)
     network.addEquation(eq)
@@ -142,45 +142,45 @@ def basic_test(filename, to_log_file):
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=True)
-        # print(vals)
-        print("all_inputs = ",all_inputs)
-        print("used_inputs = ",used_inputs)
+    # if to_log_file:
+    #     vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # else:
+    vals, stats = network.solve(verbose=True)
+    # print(vals)
+    print("all_inputs = ",all_inputs)
+    print("used_inputs = ",used_inputs)
 
-        result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
-        print('marabou solve run result: {} '.format(result))
+    result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
+    print('marabou solve run result: {} '.format(result))
 
-        if result == 'SAT':
-            for j in range(k):
-                print(j, "/", k)
-                print("last_chunk_bit_rate:")
-                for var in last_chunk_bit_rate[j]:
-                    print("var", var, " = ", vals[var])
+    if result == 'SAT':
+        for j in range(k):
+            print(j, "/", k)
+            print("last_chunk_bit_rate:")
+            for var in last_chunk_bit_rate[j]:
+                print("var", var, " = ", vals[var])
 
-                print("current_buffer_size:")
-                for var in current_buffer_size[j]:
-                    print("var", var, " = ", vals[var])
+            print("current_buffer_size:")
+            for var in current_buffer_size[j]:
+                print("var", var, " = ", vals[var])
 
-                print("past_chunk_throughput:")
-                for var in past_chunk_throughput[j]:
-                    print("var", var, " = ", vals[var])
+            print("past_chunk_throughput:")
+            for var in past_chunk_throughput[j]:
+                print("var", var, " = ", vals[var])
 
-                print("past_chunk_download_time:")
-                for var in past_chunk_download_time[j]:
-                    print("var", var, " = ", vals[var])
+            print("past_chunk_download_time:")
+            for var in past_chunk_download_time[j]:
+                print("var", var, " = ", vals[var])
 
-                print("next_chunk_sizes:")
-                for var in next_chunk_sizes[j]:
-                    print("var", var, " = ", vals[var])
+            print("next_chunk_sizes:")
+            for var in next_chunk_sizes[j]:
+                print("var", var, " = ", vals[var])
 
-                print("number_of_chunks_left:")
-                for var in number_of_chunks_left[j]:
-                    print("var", var, " = ", vals[var])
+            print("number_of_chunks_left:")
+            for var in number_of_chunks_left[j]:
+                print("var", var, " = ", vals[var])
 
 
 

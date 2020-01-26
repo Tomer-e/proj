@@ -27,6 +27,21 @@ def k_test(filename,k, to_log_file=False):
     network, input_op_names, output_op_name = create_network(filename,k)
     inputVars = network.inputVars
     outputVars = network.outputVars
+    # print ("outputVars:", outputVars)
+    # print ("len outputVars:",len(outputVars))
+    assert (len(outputVars)%utils.A_DIM  == 0)
+
+
+    # TODO : remove, sanity check
+    # a = 0
+    # for j in range (utils.S_LEN-1):
+    #     for i in range(utils.A_DIM-1):
+    #         a+=1
+    #         print (a,outputVars[j*utils.A_DIM+(utils.A_DIM - 1)] ,">",outputVars[j*utils.A_DIM+i])
+    #
+    # # choose k for the last chunk
+    # a+=1
+    # print(a, outputVars[(utils.S_LEN - 1) * utils.A_DIM],">",outputVars[-1], "==", outputVars[(utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)])
 
     all_inputs, used_inputs, unused_inputs, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput, \
     past_chunk_download_time, next_chunk_sizes, number_of_chunks_left = utils.prep_input_for_query(inputVars, k)
@@ -85,6 +100,7 @@ def k_test(filename,k, to_log_file=False):
                 eq.addAddend(0, 0) # 0
             eq.setScalar(0)
             network.addEquation(eq)
+            i+=1
 
         # past_chunk_download_time
         i=0
@@ -128,15 +144,32 @@ def k_test(filename,k, to_log_file=False):
             network.setUpperBound(var, u)
 
     for j in range(len(outputVars)):
-        network.setLowerBound(outputVars[j], -1e9)
-        network.setUpperBound(outputVars[j], 1e9)
+        network.setLowerBound(outputVars[j], -1e6)
+        network.setUpperBound(outputVars[j], 1e6)
 
-    # SD > HD
+
+    # choose hd k-1 first chunks
+    for j in range (utils.S_LEN-1):
+        for i in range(utils.A_DIM-1):
+            eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
+            eq.addAddend(1, outputVars[j*utils.A_DIM+(utils.A_DIM - 1)])
+            eq.addAddend(-1, outputVars[j*utils.A_DIM+i])
+            eq.setScalar(0)
+            network.addEquation(eq)
+
+    # choose k for the last chunk
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[4])
-    eq.addAddend(-1, outputVars[5])
+
+    # The right one:
+    # eq.addAddend(1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
+    # eq.addAddend(-1, outputVars[-1]) # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
+
+    # The sanity one:
+    eq.addAddend(1, outputVars[-1])  # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
+    eq.addAddend(-1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
     eq.setScalar(0)
     network.addEquation(eq)
+
 
     print("\nMarabou results:\n")
 

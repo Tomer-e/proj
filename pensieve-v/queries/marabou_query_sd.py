@@ -132,8 +132,10 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(outputVars[j], -1e9)
         network.setUpperBound(outputVars[j], 1e9)
 
+    # hd > sd
+    # for i in range (len (outputVars)-1):
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[-1])
+    eq.addAddend(1, outputVars[-2])
     eq.addAddend(-1, outputVars[0])
     eq.setScalar(0)
     network.addEquation(eq)
