@@ -8,7 +8,7 @@ from tensorflow.python.saved_model import tag_constants
 MARABOU_ERR = 0.001
 
 
-DOWNLOAD_TIME = 0.1
+DOWNLOAD_TIME = 0.2
 def create_network(filename,k):
     # TODO check again the input op
     input_op_names = ["actor/InputData/X"]
@@ -47,6 +47,10 @@ def k_test(filename,k, to_log_file=False):
         network.setUpperBound(eps, DOWNLOAD_TIME+MARABOU_ERR)  # max : 4s
         past_chunk_download_time_eps.append(eps)
 
+    first_chunk_size = network.getNewVariable()
+    network.setLowerBound(first_chunk_size, .3)
+    network.setUpperBound(first_chunk_size, .45)
+
     # past_chunk_throughput_eps = []
     # for j in range(k):
     #     eps = network.getNewVariable()
@@ -66,13 +70,13 @@ def k_test(filename,k, to_log_file=False):
         # last_chunk_bit_rate
         # one of VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))
         for var in last_chunk_bit_rate[j]:
-            l = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] -MARABOU_ERR# lowest definition // 300/4300
-            u = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] +MARABOU_ERR# lowest definition // 300/43000
+            l = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] - MARABOU_ERR # lowest definition // 300/4300
+            u = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] + MARABOU_ERR # lowest definition // 300/4300
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
             if j == 0:
-                l = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] # default definition // 750/4300
-                u = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] # default definition // 750/4300
+                l = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] - MARABOU_ERR # default for the first chunk // 750/4300
+                u = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] + MARABOU_ERR # default for the first chunk // 750/4300
                 network.setLowerBound(var, l)
                 network.setUpperBound(var, u)
             # else:
@@ -85,10 +89,13 @@ def k_test(filename,k, to_log_file=False):
 
         # current_buffer_size
         for var in current_buffer_size[j]:
-            l = 0.4# +((4-DOWNLOAD_TIME*10)*(j))/10 - MARABOU_ERR # ((4-DOWNLOAD_TIME*10)*(j+1))/10 - MARABOU_ERR #
-            u = 0.4# +((4-DOWNLOAD_TIME*10)*(j))/10 + MARABOU_ERR # ((4-DOWNLOAD_TIME*10)*(j+1))/10 + MARABOU_ERR #
+            l = 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10 - MARABOU_ERR # ((4-DOWNLOAD_TIME*10)*(j+1))/10 - MARABOU_ERR #
+            u = 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10 + MARABOU_ERR # ((4-DOWNLOAD_TIME*10)*(j+1))/10 + MARABOU_ERR #
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
+            print ("j = ", j, "MARABOU BUFFER SIZE:", 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10)
+
+
 
         # past_chunk_throughput
         i = 0
@@ -98,18 +105,25 @@ def k_test(filename,k, to_log_file=False):
             # u = ? //TODO
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, var)
-            if i>=(k-j):
+            if i == (k-j)-1:
+                eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
+                a[i] = 'f'
+            elif i>=(k-j):
                 # eq.addAddend(1, past_chunk_throughput_eps[j])
                 eq.addAddend(-0.1/DOWNLOAD_TIME, next_chunk_sizes[j-1][0])
+                a[i]= 'n'
             else:
                 eq.addAddend(0, 0) # 0
             eq.setScalar(0)
             network.addEquation(eq)
             i+=1
-
+        print("past_chunk_throughput")
+        print(a)
         # past_chunk_download_time
         i=0
         a = [0,0,0,0,0,0,0,0]
+
+
         for var in past_chunk_download_time[j]:
             # l = 0.1
             # u = 40 => 4s
@@ -168,17 +182,17 @@ def k_test(filename,k, to_log_file=False):
     #         network.addEquation(eq)
 
     # choose k for the last chunk
-    eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-
-    # The right one:
-    # eq.addAddend(1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
-    # eq.addAddend(-1, outputVars[-1]) # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
-
-    # The sanity one:
-    eq.addAddend(1, outputVars[-1])  # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
-    eq.addAddend(-1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
-    eq.setScalar(0)
-    network.addEquation(eq)
+    # eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
+    #
+    # # The right one:
+    # # eq.addAddend(1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
+    # # eq.addAddend(-1, outputVars[-1]) # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
+    #
+    # # The sanity one:
+    # eq.addAddend(1, outputVars[-1])  # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
+    # eq.addAddend(-1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
+    # eq.setScalar(0)
+    # network.addEquation(eq)
 
 
     print("\nMarabou results:\n")
