@@ -51,7 +51,7 @@ def basic_test(filename, to_log_file):
         # network.userDefineInputVars.append(eps)
         # 0-4 SECONDS
         network.setLowerBound(eps, 0.4) # min : 4 sec
-        network.setUpperBound(eps, 1.90) # max : 190 sec (=~4*48 sec)
+        network.setUpperBound(eps, 19) # max : 190 sec (=~4*48 sec)
         past_chunk_download_time_eps.append(eps)
 
     past_chunk_throughput_eps = []

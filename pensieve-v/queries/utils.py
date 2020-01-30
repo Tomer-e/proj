@@ -1,4 +1,4 @@
-
+import numpy as np
 M = A_DIM = 6
 S_INFO = 6
 S_LEN = 8
@@ -85,3 +85,12 @@ def prep_input_for_query (networkInputVars,k):
 
     return all_inputs, used_inputs, unused_inputs, last_chunk_bit_rate_arr, current_buffer_size_arr, past_chunk_throughput_arr, \
            past_chunk_download_time_arr, next_chunk_sizes_arr, number_of_chunks_left_arr
+
+def prep_outputs_for_query(networkOutputVars,k):
+    assert (len(networkOutputVars) == k * A_DIM)
+    all_outputs = np.asarray(networkOutputVars).reshape(k,A_DIM).tolist()
+    return all_outputs
+
+
+
+

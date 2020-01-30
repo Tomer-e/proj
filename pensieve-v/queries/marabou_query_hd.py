@@ -9,7 +9,9 @@ warnings.filterwarnings('ignore')
 
 
 
+MARABOU_ERR = 0.001
 
+DOWNLOAD_TIME = 0.1
 def create_network(filename):
     # output_op_name = "actor/FullyConnected_4/Softmax"
     # input_op_names = ["actor/InputData/X"]
@@ -46,21 +48,21 @@ def basic_test(filename, to_log_file):
 
 
     past_chunk_download_time_eps = []
-    for j in range(k):
+    for j in range(utils.S_LEN):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
         # 0-4 SECONDS
-        network.setLowerBound(eps, 0.001)
-        network.setUpperBound(eps, 0.4) # max : 4s
+        network.setLowerBound(eps, DOWNLOAD_TIME-MARABOU_ERR)
+        network.setUpperBound(eps, DOWNLOAD_TIME+MARABOU_ERR)
         past_chunk_download_time_eps.append(eps)
 
-    past_chunk_throughput_eps = []
-    for j in range(k):
+    chunk_size_eps = []
+    for j in range(utils.S_LEN):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
-        network.setLowerBound(eps, 0.5) # min throughput (for delay of 4s)
-        network.setUpperBound(eps, 5)   #
-        past_chunk_throughput_eps.append(eps)
+        network.setLowerBound(eps, 1.9) #
+        network.setUpperBound(eps, 2.5) #
+        chunk_size_eps.append(eps)
 
     for var in unused_inputs:
         l = 0
@@ -73,29 +75,35 @@ def basic_test(filename, to_log_file):
         # last_chunk_bit_rate
         # one of VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))
         for var in last_chunk_bit_rate[j]:
-            l = 1 # Highest definition // 4300/4300
-            u = 1 # Highest definition //
+            l =1-0.05 # Highest definition // 4300/4300
+            u =1+MARABOU_ERR # Highest definition //
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # current_buffer_size
         for var in current_buffer_size[j]:
-            l = 0.4 # 4 seconds
-            u = 19  # 190 seconds ~= 48 *4
+            l = 0.8
+            u = 19
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
         # past_chunk_throughput
+        i = 0
         for var in past_chunk_throughput[j]:
-            # l = ? //TODO
-            # u = ? //TODO
+            # l = 0 #//TODO
+            # u = 10000 #//TODO
+            # network.setLowerBound(var, l)
+            # network.setUpperBound(var, u)
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
-            eq.addAddend(-1, var)
-            eq.addAddend(1, past_chunk_throughput_eps[j])
+            eq.addAddend(1, var)
+            eq.addAddend(-0.1/DOWNLOAD_TIME, chunk_size_eps[i])
+            # eq.addAddend(1, chunk_size_eps[i])
             eq.setScalar(0)
             network.addEquation(eq)
+            i+=1
 
         # past_chunk_download_time
+        i = 0
         for var in past_chunk_download_time[j]:
             # l = 0.1
             # u = 40 => 4s
@@ -104,26 +112,33 @@ def basic_test(filename, to_log_file):
             eq.addAddend(1, past_chunk_download_time_eps[j])
             eq.setScalar(0)
             network.addEquation(eq)
+            i+=1
+
 
         # next_chunk_sizes
+        # basic_size = 2/utils.VIDEO_BIT_RATE[-1] # =0.00046511627906976747 # 2 MB in HD, 4300 bps
+        # sizes = [basic_size * bitrate for bitrate in utils.VIDEO_BIT_RATE]
         size_i = 0
-        basic_size = 2/utils.VIDEO_BIT_RATE[-1] # =0.00046511627906976747 # 2 MB in HD, 4300 bps
-        sizes = [basic_size * bitrate for bitrate in utils.VIDEO_BIT_RATE]
+        # chunk_size_lower_bounds = [.1, .3, .5, .8,   1.2, 1.5]
+        # chunk_size_upper_bounds = [.3, .6, .9,  1.3, 2, 2.4]
+
+        chunk_size_lower_bounds =[.126289, .318564, .520315, .801058, 1.22426, 1.941625]
+        chunk_size_upper_bounds =[.181801, .450283, .709534, 1.060487, 1.728879, 2.354772]
         assert len (next_chunk_sizes[j]) == len (utils.VIDEO_BIT_RATE)
         for var in next_chunk_sizes[j]:
             # All sizes
             # chunk_size = utils.VIDEO_BIT_RATE[size_i]
             # print("chunk_size", chunk_size)
-            l = sizes[size_i]  # chunk_size
-            u = sizes[size_i]  # chunk_size
+            l = chunk_size_lower_bounds[size_i]  # chunk_size
+            u = chunk_size_upper_bounds[size_i]  # chunk_size
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
             size_i +=1
 
         # number_of_chunks_left
         for var in number_of_chunks_left[j]:
-            l = 1/48 # only one chunk left to play
-            u = 1/48 # only one chunk left to play
+            l = 0 - MARABOU_ERR# 0/48 # only one chunk left to play
+            u = 0 + MARABOU_ERR# 0/48 # only one chunk left to play
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -131,9 +146,9 @@ def basic_test(filename, to_log_file):
         network.setLowerBound(outputVars[j], -1e9)
         network.setUpperBound(outputVars[j], 1e9)
 
-    # SD > HD
+    # # SD > HD
     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    eq.addAddend(1, outputVars[3])
+    eq.addAddend(1, outputVars[0])
     eq.addAddend(-1, outputVars[5])
     eq.setScalar(0)
     network.addEquation(eq)
