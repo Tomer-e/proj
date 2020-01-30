@@ -4,12 +4,6 @@ import numpy as np
 import utils
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
-import sys
-
-#MARABOU_ERR = 0.05
-
-
-OUTPUT_TO_FILE = True
 
 def create_network(filename,k):
     # TODO check again the input op
@@ -28,7 +22,7 @@ def create_network(filename,k):
 # c~t is the number of chunks remaining in the video;
 # l~t is the bitrate at which the last chunk was downloaded.
 
-def k_test(filename,k,download_time, to_log_file=False):
+def k_test(filename,k,download_time):
     DOWNLOAD_TIME = download_time
     network, input_op_names, output_op_name = create_network(filename,k)
     inputVars = network.inputVars
@@ -183,7 +177,7 @@ def k_test(filename,k,download_time, to_log_file=False):
         network.setUpperBound(outputVars[j], 1e6)
 
 
-    # choose hd k-1 first chunks
+
     print(all_outputs)
     for network_output in all_outputs:
         print("=============")
@@ -215,47 +209,13 @@ def k_test(filename,k,download_time, to_log_file=False):
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log", verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=True)
-        # print(vals)
-        print("all_inputs = ", all_inputs)
-        print("used_inputs = ", used_inputs)
+    vals, stats = network.solve(verbose=True)
 
-        result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
-        print('marabou solve run result: {} '.format(result))
+    print("all_inputs = ", all_inputs)
+    print("used_inputs = ", used_inputs)
+    utils.handle_results("HD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
 
-        if result == 'SAT':
-            for j in range(k):
-                print(j, "/", k)
-                print("last_chunk_bit_rate:")
-                for var in last_chunk_bit_rate[j]:
-                    print("var", var, " = ", vals[var])
 
-                print("current_buffer_size:")
-                for var in current_buffer_size[j]:
-                    print("var", var, " = ", vals[var])
-
-                print("past_chunk_throughput:")
-                for var in past_chunk_throughput[j]:
-                    print("var", var, " = ", vals[var])
-
-                print("past_chunk_download_time:")
-                for var in past_chunk_download_time[j]:
-                    print("var", var, " = ", vals[var])
-
-                print("next_chunk_sizes:")
-                for var in next_chunk_sizes[j]:
-                    print("var", var, " = ", vals[var])
-
-                print("number_of_chunks_left:")
-                for var in number_of_chunks_left[j]:
-                    print("var", var, " = ", vals[var])
-
-import sys
 
 def main():
 
@@ -264,8 +224,8 @@ def main():
         exit(0)
     filename = sys.argv[1]
     k = int(sys.argv[2])
-    download_time = int(sys.argv[3])
-    k_test(filename,k,download_time,False)
+    download_time = float(sys.argv[3])
+    k_test(filename,k,download_time)
 
 if __name__ == "__main__":
     main()
