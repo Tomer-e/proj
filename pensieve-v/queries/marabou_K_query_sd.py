@@ -46,9 +46,14 @@ def k_test(filename,k,download_time):
         network.setUpperBound(eps, DOWNLOAD_TIME)#+MARABOU_ERR)  # max : 4s
         past_chunk_download_time_eps.append(eps)
 
+    chunk_size_lower_bounds = [.126289, .318564, .520315, .801058, 1.22426, 1.941625]
+    chunk_size_upper_bounds = [.181801, .450283, .709534, 1.060487, 1.728879, 2.354772]
+    # chunk_size_lower_bounds = [.1, .3, .5, .8,   1.2, 1.5]
+    # chunk_size_upper_bounds = [.3, .6, .9,  1.3, 2, 2.4]
+
     first_chunk_size = network.getNewVariable()
-    network.setLowerBound(first_chunk_size, .3)
-    network.setUpperBound(first_chunk_size, .45)
+    network.setLowerBound(first_chunk_size, chunk_size_lower_bounds[1])
+    network.setUpperBound(first_chunk_size, chunk_size_lower_bounds[1])
 
     # past_chunk_throughput_eps = []
     # for j in range(k):
@@ -94,7 +99,6 @@ def k_test(filename,k,download_time):
             network.setUpperBound(var, u)
 
 
-
         # past_chunk_throughput
         i = 0
         a = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -103,15 +107,27 @@ def k_test(filename,k,download_time):
             # u = ? //TODO
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, var)
-            if i == (utils.S_LEN-j)-1:
-                eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
-                a[i] = 'f'
-            elif i>=(utils.S_LEN-j):
-                # eq.addAddend(1, past_chunk_throughput_eps[j])
-                eq.addAddend(-0.1/DOWNLOAD_TIME, next_chunk_sizes[j-1][0]) # SD
-                a[i]= 'n'
+            if j == 0:
+                if i == (utils.S_LEN-j)-1:
+                    eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
+                    a[i] = 'f'
+                # elif i>=(utils.S_LEN-j):
+                #     # eq.addAddend(1, past_chunk_throughput_eps[j])
+                #     eq.addAddend(-0.1/DOWNLOAD_TIME, next_chunk_sizes[j-1][-1]) # HD
+                #     a[i]= 'n'
+                else:
+                    eq.addAddend(0, 0) # 0
             else:
-                eq.addAddend(0, 0) # 0
+                if i == (utils.S_LEN)-1:
+                    eq.addAddend(-0.1/DOWNLOAD_TIME,next_chunk_sizes[j-1][0])# SD
+                    a[i] = 'f'
+                elif i>=(utils.S_LEN-j):
+                    # eq.addAddend(1, past_chunk_throughput_eps[j])
+                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1]) 
+                    a[i]= 'n'
+                else:
+                    eq.addAddend(0, 0) # 0
+
             eq.setScalar(0)
             network.addEquation(eq)
             i+=1
@@ -139,11 +155,9 @@ def k_test(filename,k,download_time):
         print(a)
 
         # next_chunk_sizes
-        size_i = 0
+        i = 0
         # basic_size = 2 / utils.VIDEO_BIT_RATE[-1]  # =0.00046511627906976747 # 2 MB in HD, 4300 bps
         # sizes = [basic_size * bitrate for bitrate in utils.VIDEO_BIT_RATE]
-        chunk_size_lower_bounds = [.126289,.318564,.520315, .801058, 1.22426, 1.941625]
-        chunk_size_upper_bounds = [.181801,.450283,.709534, 1.060487, 1.728879, 2.354772]
         # chunk_size_lower_bounds = [.1, .3, .5, .8,   1.2, 1.5]
         # chunk_size_upper_bounds = [.3, .6, .9,  1.3, 2, 2.4]
 
@@ -152,18 +166,18 @@ def k_test(filename,k,download_time):
             # All sizes
             # chunk_size = utils.VIDEO_BIT_RATE[size_i]
             # print("chunk_size", chunk_size)
-            if size_i == 0:
-                l = chunk_size_lower_bounds[size_i]# sizes[size_i]  # chunk_size
-                u = chunk_size_upper_bounds[size_i]# sizes[size_i]  # chunk_size
+            if i == 0:
+                l = chunk_size_lower_bounds[i]# chunk_size
+                u = chunk_size_upper_bounds[i]# chunk_size
                 network.setLowerBound(var, l)
                 network.setUpperBound(var, u)
             else:
                 eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
                 eq.addAddend(-1, var)
-                eq.addAddend(utils.VIDEO_BIT_RATE[size_i]/utils.VIDEO_BIT_RATE[0], next_chunk_sizes[j][0])# SD
+                eq.addAddend(utils.VIDEO_BIT_RATE[i]/utils.VIDEO_BIT_RATE[0], next_chunk_sizes[j][0])
                 eq.setScalar(0)
                 network.addEquation(eq)
-            size_i += 1
+            i += 1
 
         # number_of_chunks_left
         for var in number_of_chunks_left[j]:
@@ -185,11 +199,11 @@ def k_test(filename,k,download_time):
             if bit_rate_var == network_output[0]:
                 continue
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-            eq.addAddend(1, network_output[0])
+            eq.addAddend(1, network_output[0]) #SD > rest of bit rates
             eq.addAddend(-1, bit_rate_var)
             eq.setScalar(0)
             network.addEquation(eq)
-            print(network_output[0],">",bit_rate_var )
+            # print(network_output[0],">",bit_rate_var )
 
     # choose k for the last chunk
     # eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
@@ -213,7 +227,7 @@ def k_test(filename,k,download_time):
 
     print("all_inputs = ", all_inputs)
     print("used_inputs = ", used_inputs)
-    utils.handle_results("HD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
+    utils.handle_results("SD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
 
 
 

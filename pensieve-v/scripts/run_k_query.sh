@@ -1,19 +1,43 @@
 #!/bin/bash
-#SBATCH --job-name=pensieve_q
+#SBATCH --job-name=pensieve.job
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=10g
-#SBATCH --output=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/sed_res
-#SBATCH --partition=long
-#SBATCH --time=1-0
-#SBATCH --signal=B:SIGUSR1@300
+#SBATCH --mem=16g
+#SBATCH --output=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/sed_res_0102/slurm.out
+#SBATCH --time=5-0
+
+QUERY=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/queries/marabou_K_query_hd.py
+MODEL=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/model/output_graph.pb
+
+RES_DIR=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/sed_res_0102
 
 
-
-#hd query
-for fp in $(seq 0.4 .05 0.5)
+cd $RES_DIR
+for fp in $(seq 0.4 .05 1)
 do
-for j in {1..2}
+    for j in {1..8}
+    do
+          echo model = $MODEL
+          echo query = $QUERY
+          echo k = $j download time = $fp
+          python3 $QUERY $MODEL $j $fp
+    done
+done
+
+QUERY=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/queries/marabou_K_query_sd.py
+MODEL=/cs/labs/guykatz/tomerel/vrl/proj/pensieve-v/model/output_graph.pb
+
+
+
+for fp in $(seq 0 .05 0.4)
 do
-  python3 ../queries/marabou_K_query_hd.py ../model/output_graph.pb $j $fp
+    for j in {1..8}
+    do
+          echo model = $MODEL
+          echo query = $QUERY
+          echo k = $j download time = $fp
+          python3 $QUERY $MODEL $j $fp
+    done
 done
-done
+
+
+exit 0

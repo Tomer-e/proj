@@ -5,7 +5,7 @@ S_INFO = 6
 S_LEN = 8
 VIDEO_BIT_RATE = [300,750,1200,1850,2850,4300]
 OUTPUT_TO_FILE = True
-
+import os
 # # split_0 = tflearn.fully_connected(inputs[:, 0:1, -1]    , 128, activation='relu')
 # # split_1 = tflearn.fully_connected(inputs[:, 1:2, -1]    , 128, activation='relu')
 # # split_2 = tflearn.conv_1d(inputs[:, 2:3, :]     , 128, 4, activation='relu')
@@ -124,51 +124,55 @@ def handle_results(query_name,k, download_time, vals, last_chunk_bit_rate, curre
             for var in number_of_chunks_left[j]:
                 print("var", var, " = ", vals[var])
 
+
     if OUTPUT_TO_FILE:
-        filename = "pensieve_"+query_name+"_download_time_"+str(download_time*10)+"_k_"+str(k)+".res"
-    with open(filename,'w') as out_file:
-        print('marabou solve run result: {} '.format(result),file=out_file)
+        dir = query_name+"_res"
+        if not os.path.isdir(dir):
+            os.mkdir(dir)
+        filename = dir+"/pensieve_"+query_name+"_download_time_"+str(download_time*10)+"_k_"+str(k)+".res"
+        with open(filename,'w') as out_file:
+            print('marabou solve run result: {} '.format(result),file=out_file)
+            if result == 'SAT':
+                print("Counter example: ",file=out_file)
+                for j in range(k):
+                    print(j, "/", k,file=out_file)
+                    print("last_chunk_bit_rate:",file=out_file)
+                    for var in last_chunk_bit_rate[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-        if result == 'SAT':
-            for j in range(k):
-                print(j, "/", k,file=out_file)
-                print("last_chunk_bit_rate:",file=out_file)
-                for var in last_chunk_bit_rate[j]:
-                    print("var", var, " = ", vals[var],file=out_file)
+                    print("current_buffer_size:",file=out_file)
+                    for var in current_buffer_size[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-                print("current_buffer_size:",file=out_file)
-                for var in current_buffer_size[j]:
-                    print("var", var, " = ", vals[var],file=out_file)
+                    print("past_chunk_throughput:",file=out_file)
+                    for var in past_chunk_throughput[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-                print("past_chunk_throughput:",file=out_file)
-                for var in past_chunk_throughput[j]:
-                    print("var", var, " = ", vals[var],file=out_file)
+                    print("past_chunk_download_time:",file=out_file)
+                    for var in past_chunk_download_time[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-                print("past_chunk_download_time:",file=out_file)
-                for var in past_chunk_download_time[j]:
-                    print("var", var, " = ", vals[var])
+                    print("next_chunk_sizes:",file=out_file)
+                    for var in next_chunk_sizes[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-                print("next_chunk_sizes:",file=out_file)
-                for var in next_chunk_sizes[j]:
-                    print("var", var, " = ", vals[var],file=out_file)
+                    print("number_of_chunks_left:",file=out_file)
+                    for var in number_of_chunks_left[j]:
+                        print("var", var, " = ", vals[var],file=out_file)
 
-                print("number_of_chunks_left:",file=out_file)
-                for var in number_of_chunks_left[j]:
-                    print("var", var, " = ", vals[var],file=out_file)
-
-                print("k =",j,"output:",file=out_file)
-                i=0
-                i_max = 0
-                max = 0
-                for var in all_outputs[j]:
-                    if vals[var]>max:
-                        max = vals[var]
-                        i_max = i
-                    i+=1
-                i=0
-                for var in all_outputs[j]:
-                    if i == i_max:
-                        print("var", var, " = ", vals[var], "("+str(i)+")  <== ", file=out_file)
-                    else:
-                        print("var", var, " = ", vals[var], "(" + str(i) + ")", file=out_file)
-                    i+=1
+                    print("k =",j,"output:",file=out_file)
+                    i=0
+                    i_max = 0
+                    max = 0
+                    for var in all_outputs[j]:
+                        if vals[var]>max:
+                            max = vals[var]
+                            i_max = i
+                        i+=1
+                    i=0
+                    for var in all_outputs[j]:
+                        if i == i_max:
+                            print("var", var, " = ", vals[var], "("+str(i)+")  <== ", file=out_file)
+                        else:
+                            print("var", var, " = ", vals[var], "(" + str(i) + ")", file=out_file)
+                        i+=1
