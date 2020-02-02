@@ -7,6 +7,8 @@ from tensorflow.python.saved_model import tag_constants
 
 QUERY_BITRATE = 5 # HD
 
+## HD QUERY : the situation is bad and we were expected bitrate to be SD, but actual bitrate is HD
+
 def create_network(filename,k):
     # TODO check again the input op
     input_op_names = ["actor/InputData/X"]
@@ -58,13 +60,6 @@ def k_test(filename,k,download_time):
     network.setLowerBound(first_chunk_size, chunk_size_lower_bounds[1])
     network.setUpperBound(first_chunk_size, chunk_size_lower_bounds[1])
 
-    # past_chunk_throughput_eps = []
-    # for j in range(k):
-    #     eps = network.getNewVariable()
-    #     # network.userDefineInputVars.append(eps)
-    #     network.setLowerBound(eps, 0.5)  # min throughput (for delay of 4s)
-    #     network.setUpperBound(eps, 5)  #
-    #     past_chunk_throughput_eps.append(eps)
 
     for var in unused_inputs:
         l = 0
@@ -113,31 +108,21 @@ def k_test(filename,k,download_time):
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, var)
             if j == 0:
-                if i == (utils.S_LEN-j)-1:
+                if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
                     a[i] = 'f'
-                # elif i>=(utils.S_LEN-j):
-                #     # eq.addAddend(1, past_chunk_throughput_eps[j])
-                #     eq.addAddend(-0.1/DOWNLOAD_TIME, next_chunk_sizes[j-1][-1]) # HD
-                #     a[i]= 'n'
                 else:
                     eq.addAddend(0, 0) # 0
             else:
                 if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,next_chunk_sizes[j-1][QUERY_BITRATE])# HD
                     a[i] = 'f'
-                elif i>=(utils.S_LEN-j):
-                    # eq.addAddend(1, past_chunk_throughput_eps[j])
-                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1]) 
-                    a[i]= 'n'
                 else:
-                    eq.addAddend(0, 0) # 0
+                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1])
 
             eq.setScalar(0)
             network.addEquation(eq)
             i+=1
-        print("past_chunk_throughput")
-        print(a)
         # past_chunk_download_time
         i=0
         a = [0,0,0,0,0,0,0,0]
@@ -192,8 +177,8 @@ def k_test(filename,k,download_time):
             network.setUpperBound(var, u)
 
     for j in range(len(outputVars)):
-        network.setLowerBound(outputVars[j], -1e7)
-        network.setUpperBound(outputVars[j], 1e7)
+        network.setLowerBound(outputVars[j], -1e6)
+        network.setUpperBound(outputVars[j], 1e6)
 
 
     # print(all_outputs)
@@ -208,20 +193,6 @@ def k_test(filename,k,download_time):
             eq.setScalar(0)
             network.addEquation(eq)
             # print(network_output[-1],">",bit_rate_var )
-
-    # choose k for the last chunk
-    # eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
-    #
-    # # The right one:
-    # # eq.addAddend(1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
-    # # eq.addAddend(-1, outputVars[-1]) # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
-    #
-    # # The sanity one:
-    # eq.addAddend(1, outputVars[-1])  # outputVars[utils.S_LEN - 1) * utils.A_DIM + (utils.A_DIM - 1)]
-    # eq.addAddend(-1, outputVars[(utils.S_LEN - 1) * utils.A_DIM])
-    # eq.setScalar(0)
-    # network.addEquation(eq)
-
 
     print("\nMarabou results:\n")
 

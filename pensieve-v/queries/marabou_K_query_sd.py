@@ -5,6 +5,8 @@ import utils
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
 
+## SD QUERY : the situation is great and we were expected bitrate to be HD, but actual bitrate is SD
+
 def create_network(filename,k):
     # TODO check again the input op
     input_op_names = ["actor/InputData/X"]
@@ -74,15 +76,17 @@ def k_test(filename,k,download_time):
         # last_chunk_bit_rate
         # one of VIDEO_BIT_RATE[bit_rate] / float(np.max(VIDEO_BIT_RATE))
         for var in last_chunk_bit_rate[j]:
-            l = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # - MARABOU_ERR # lowest definition // 300/4300
-            u = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # + MARABOU_ERR # lowest definition // 300/4300
-            network.setLowerBound(var, l)
-            network.setUpperBound(var, u)
             if j == 0:
                 l = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] # - MARABOU_ERR # default for the first chunk // 750/4300
                 u = utils.VIDEO_BIT_RATE[1]/utils.VIDEO_BIT_RATE[-1] # + MARABOU_ERR # default for the first chunk // 750/4300
                 network.setLowerBound(var, l)
                 network.setUpperBound(var, u)
+            else:
+                l = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # 
+                u = utils.VIDEO_BIT_RATE[0]/utils.VIDEO_BIT_RATE[-1] # 
+                network.setLowerBound(var, l)
+                network.setUpperBound(var, u)
+
             # else:
             #     eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
             #     eq.addAddend(1, var)
@@ -93,8 +97,8 @@ def k_test(filename,k,download_time):
 
         # current_buffer_size
         for var in current_buffer_size[j]:
-            l = 0.4 #+((4-DOWNLOAD_TIME*10)*(j))/10 - 0.03 # MARABOU_ERR # ((4-DOWNLOAD_TIME*10)*(j+1))/10 - MARABOU_ERR #
-            u = 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10 + 0.03 # ((4-DOWNLOAD_TIME*10)*(j+1))/10 + MARABOU_ERR #
+            l = 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10 
+            u = 0.4 +((4-DOWNLOAD_TIME*10)*(j))/10 
             network.setLowerBound(var, l)
             network.setUpperBound(var, u)
 
@@ -108,25 +112,22 @@ def k_test(filename,k,download_time):
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, var)
             if j == 0:
-                if i == (utils.S_LEN-j)-1:
+                if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
                     a[i] = 'f'
-                # elif i>=(utils.S_LEN-j):
-                #     # eq.addAddend(1, past_chunk_throughput_eps[j])
-                #     eq.addAddend(-0.1/DOWNLOAD_TIME, next_chunk_sizes[j-1][-1]) # HD
-                #     a[i]= 'n'
                 else:
                     eq.addAddend(0, 0) # 0
             else:
                 if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,next_chunk_sizes[j-1][0])# SD
                     a[i] = 'f'
-                elif i>=(utils.S_LEN-j):
+                #elif i>=(utils.S_LEN-j)-1:
                     # eq.addAddend(1, past_chunk_throughput_eps[j])
-                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1]) 
-                    a[i]= 'n'
+                 #   eq.addAddend(-1, past_chunk_throughput[j-1][i+1]) 
+                  #  a[i]= 'n'
                 else:
-                    eq.addAddend(0, 0) # 0
+                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1]) 
+                    #eq.addAddend(0, 0) # 0
 
             eq.setScalar(0)
             network.addEquation(eq)
@@ -167,8 +168,8 @@ def k_test(filename,k,download_time):
             # chunk_size = utils.VIDEO_BIT_RATE[size_i]
             # print("chunk_size", chunk_size)
             if i == 0:
-                l = chunk_size_lower_bounds[i]# chunk_size
-                u = chunk_size_upper_bounds[i]# chunk_size
+                l = chunk_size_lower_bounds[0]# chunk_size
+                u = chunk_size_upper_bounds[0]# chunk_size
                 network.setLowerBound(var, l)
                 network.setUpperBound(var, u)
             else:

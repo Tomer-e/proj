@@ -5,7 +5,6 @@ import utils
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
 
-# QUERY_BITRATE = 5 # HD
 
 def create_network(filename,k):
     # TODO check again the input op
@@ -107,7 +106,7 @@ def k_test(filename,k,download_time,bitrate):
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             eq.addAddend(1, var)
             if j == 0:
-                if i == (utils.S_LEN-j)-1:
+                if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,first_chunk_size)
                     a[i] = 'f'
                 else:
@@ -116,19 +115,12 @@ def k_test(filename,k,download_time,bitrate):
                 if i == (utils.S_LEN)-1:
                     eq.addAddend(-0.1/DOWNLOAD_TIME,next_chunk_sizes[j-1][QUERY_BITRATE])
                     a[i] = 'f'
-                # elif i>=(utils.S_LEN-j):
-                    # eq.addAddend(1, past_chunk_throughput_eps[j])
-                    # eq.addAddend(-1, past_chunk_throughput[j-1][i+1])
-                    # a[i]= 'n'
                 else:
-                    eq.addAddend(-1, past_chunk_throughput[j - 1][i + 1])
-                    # eq.addAddend(0, 0) # 0
+                    eq.addAddend(-1, past_chunk_throughput[j-1][i+1])
 
             eq.setScalar(0)
             network.addEquation(eq)
             i+=1
-        print("past_chunk_throughput")
-        print(a)
         # past_chunk_download_time
         i=0
         a = [0,0,0,0,0,0,0,0]
@@ -183,8 +175,8 @@ def k_test(filename,k,download_time,bitrate):
             network.setUpperBound(var, u)
 
     for j in range(len(outputVars)):
-        network.setLowerBound(outputVars[j], -1e7)
-        network.setUpperBound(outputVars[j], 1e7)
+        network.setLowerBound(outputVars[j], -1e6)
+        network.setUpperBound(outputVars[j], 1e6)
 
 
     # print(all_outputs)
