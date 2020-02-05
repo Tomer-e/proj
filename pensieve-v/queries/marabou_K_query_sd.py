@@ -1,4 +1,4 @@
-import sys
+ import sys
 from maraboupy import Marabou, MarabouUtils, MarabouCore
 import numpy as np
 import utils
@@ -55,7 +55,7 @@ def k_test(filename,k,download_time):
 
     first_chunk_size = network.getNewVariable()
     network.setLowerBound(first_chunk_size, chunk_size_lower_bounds[1])
-    network.setUpperBound(first_chunk_size, chunk_size_lower_bounds[1])
+    network.setUpperBound(first_chunk_size, chunk_size_upper_bounds[1])
 
     # past_chunk_throughput_eps = []
     # for j in range(k):
@@ -228,8 +228,8 @@ def k_test(filename,k,download_time):
 
     print("all_inputs = ", all_inputs)
     print("used_inputs = ", used_inputs)
-    utils.handle_results("SD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
-
+    result = utils.handle_results("SD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
+    return result
 
 
 def main():

@@ -200,8 +200,8 @@ def k_test(filename,k,download_time,bitrate):
 
     print("all_inputs = ", all_inputs)
     print("used_inputs = ", used_inputs)
-    utils.handle_results("rebuf_bitrate"+str(bitrate),k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
-
+    result = utils.handle_results("rebuf_bitrate"+str(QUERY_BITRATE),k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
+    return result
 
 
 def main():
