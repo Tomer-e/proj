@@ -138,19 +138,20 @@ def k_test(filename,k, to_log_file=False):
     print("\nMarabou results:\n")
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
-    if to_log_file:
-        options = Marabou.createOptions(numWorkers=8,dnc=True)
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False, options = options)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        options = Marabou.createOptions(numWorkers=8,dnc=True)
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False, options = options)
-        print(vals)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # if to_log_file:
+    #     options = Marabou.createOptions(numWorkers=8,dnc=True)
+    #     vals, stats = network.solve("results/vrl_marabou.log",verbose=False, options = options)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # options = Marabou.createOptions(numWorkers=8,dnc=True)
+    vals, stats = network.solve()#"results/vrl_marabou.log",verbose=False)#, options = options)
+    print(vals)
+    result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
+    print('marabou solve run result: {} '.format(
+        result))
     # TODO: fix inputs
-    utils.write_results_to_file(vals,[0], outputVars, "K-query3",query_info,".",k)
+    # utils.write_results_to_file(vals,[0], outputVars, "K-query3",query_info,".",k)
+    return result
 
 
 import sys

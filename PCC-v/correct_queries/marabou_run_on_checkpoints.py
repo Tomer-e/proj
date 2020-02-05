@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.python.saved_model import tag_constants
 
 
-from marabou_K_query1 import *
+from marabou_query3 import *
 
 
 
@@ -29,7 +29,8 @@ def main():
         print("                    checkpoint_"+str(idx))
         print("-------------------------------------------------")
         print(pb_filename)
-        results.append(k_test(pb_filename, k, False))
+        # results.append(k_test(pb_filename, k, False))
+        results.append(basic_test(pb_filename,))
         # basic_test(pb_filename, len(sys.argv) == 3)
         idx+=1
     print(results)

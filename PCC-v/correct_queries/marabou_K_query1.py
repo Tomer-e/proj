@@ -39,12 +39,14 @@ def k_test(filename,k, to_log_file=False):
     latency_gradient_eps = []
     for i in range(k):
         eps = network.getNewVariable()
+        print()
         network.setLowerBound(eps, -0.02)
         network.setUpperBound(eps, 0.02)
         latency_gradient_eps.append(eps)
 
     # epsilon for bounding latency ratio
     latency_ratio_eps = network.getNewVariable()
+    network.userDefineInputVars.append(latency_ratio_eps)
 
     network.setLowerBound(latency_ratio_eps, 1)
     network.setUpperBound(latency_ratio_eps, 1.02)
@@ -77,71 +79,82 @@ def k_test(filename,k, to_log_file=False):
         latency_gradient_indices = [i for i in range(0, len(inputVars), 3)]
         latency_ratio_indices = [i + 1 for i in range(0, len(inputVars), 3)]
         sending_ratio_indices = [i + 2 for i in range(0, len(inputVars), 3)]
+        # print("latency_gradient_indices:")
         for i in latency_gradient_indices:
+            # print("i = ",i,"inputVars[i]=",   inputVars[i])
             # l = 0 - eps
             # u = 0 + eps
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
             new_input_idx = (b+j)%(k)
             eq.addAddend(-1, inputVars[i])
             eq.addAddend(1, new_inputs[new_input_idx])
-            print("var",inputVars[i], " = input"+str(new_input_idx), "var idx = ", new_inputs[new_input_idx] )
+            # print("var",inputVars[i], " = input"+str(new_input_idx), "var idx = ", new_inputs[new_input_idx] )
             eq.setScalar(0)
             network.addEquation(eq)
             b+=1
 
+        # print("latency_ratio_indices")
         for i in latency_ratio_indices:
+            # print("i = ", i, "inputVars[i]=", inputVars[i])
             # l = 1
             # u = 1 + eps
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.EQ)
+            # network.userDefineInputVars.append(inputVars[i])
             eq.addAddend(1, inputVars[i])
-            network.userDefineInputVars.append(inputVars[i])
             eq.addAddend(-1, latency_ratio_eps)
             eq.setScalar(0)
             network.addEquation(eq)
 
+        # print("sending_ratio_indices")
         for i in sending_ratio_indices:
-            l = 1
+            # print("i = ", i, "inputVars[i]=", inputVars[i])
+            l = 1 # No loss
             u = 1
             network.userDefineInputVars.append(inputVars[i])
             network.setUpperBound(inputVars[i], u)
             network.setLowerBound(inputVars[i], l)
 
     for i in range(len(outputVars)):
-        network.setLowerBound(outputVars[i], -0.05)  # FOR K-query - 0.01 (), for 1 - query, any example with minus will do.
-        network.setUpperBound(outputVars[i], 0.05)
+        network.setLowerBound(outputVars[i], -0.01)  # FOR K-query - 0.01 (), for 1 - query, any example with minus will do.
+        network.setUpperBound(outputVars[i], 0.01)
 
     query_info = "-0.02<=latency_gradient<= 0.02, 1<=latency_ratio_indices<=1.02, sending_ratio_indices = 1\n" \
                  "output=0 (with a little error)"
-
+    # return
     print("\nMarabou results:\n")
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=True)
-        print(vals)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # if to_log_file:
+    #     vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # else:
+    #     vals, stats = network.solve(verbose=True)
+    #     print(vals)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
 
-    utils.write_results_to_file(vals,inputVars, outputVars, "K-query1",query_info,".",k)
+    vals, stats = network.solve()#"results/vrl_marabou.log",verbose=False)#, options = options)
+    print(vals)
+    result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
+    print('marabou solve run result: {} '.format(
+        result))
+    # TODO: fix inputs
+    # utils.write_results_to_file(vals,inputVars, outputVars, "K-query1",query_info,".",k)
+    return result
+    # utils.write_results_to_file(vals,inputVars, outputVars, "K-query1",query_info,".",k)
 
 
 import sys
 
 def main():
 
-    if len(sys.argv) not in [2,3]:
+    if len(sys.argv) not in [3]:
         print("usage:",sys.argv[0], "<pb_filename> [k] ")
         exit(0)
     filename = sys.argv[1]
-    if (len(sys.argv) == 2):
-        k_test(filename,1,False)
-    if (len(sys.argv) == 3):
-        k = int(sys.argv[2])
-        k_test(filename,k,False)
+    k = int(sys.argv[2])
+    k_test(filename,k,False)
 
 if __name__ == "__main__":
     main()

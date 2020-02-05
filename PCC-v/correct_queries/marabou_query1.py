@@ -19,7 +19,7 @@ def create_network(filename):
 #           the connection’s history
 # 20 - 29 : sending ratio, the ratio of packets sent to packets acknowledged by the receiver
 
-def basic_test(filename, to_log_file):
+def basic_test(filename):
 
     network,input_op_names, output_op_name =  create_network(filename)
 
@@ -101,18 +101,19 @@ def basic_test(filename, to_log_file):
 
     # network.saveQuery("/cs/usr/tomerel/unsafe/VerifyingDeepRL/WP/proj/results/basic_query")
     # Call to C++ Marabou solver
-    if to_log_file:
-        vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
-    else:
-        vals, stats = network.solve(verbose=True)
-        print(vals)
-        print('marabou solve run result: {} '.format(
-            'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # if to_log_file:
+    #     vals, stats = network.solve("results/vrl_marabou.log",verbose=False)
+    #     print('marabou solve run result: {} '.format(
+    #         'SAT' if len(list(vals.items())) != 0 else 'UNSAT'))
+    # else:
+    vals, stats = network.solve(verbose=True)
+    # print(vals)
+    result = 'SAT' if len(list(vals.items())) != 0 else 'UNSAT'
+    print('marabou solve run result: {} '.format(
+        result))
 
-    utils.write_results_to_file(vals,inputVars, outputVars, "query1",query_info,".")
-
+    # utils.write_results_to_file(vals,inputVars, outputVars, "query1",query_info,".")
+    return result
 
 
 
@@ -122,13 +123,12 @@ import sys
 
 def main():
 
-    if len(sys.argv) not in [2,3]:
-        print("usage:",sys.argv[0], "<pb_filename> [-l]")
+    if len(sys.argv) not in [2]:
+        print("usage:",sys.argv[0], "<pb_filename> ")
         exit(0)
 
     filename = sys.argv[1]
-    print("=========================-basic_test-=========================")
-    basic_test(filename, len(sys.argv) == 3)
+    basic_test(filename)
 
 
 

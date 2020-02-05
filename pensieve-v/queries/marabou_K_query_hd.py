@@ -5,7 +5,7 @@ import utils
 from eval_network import evaluateNetwork
 from tensorflow.python.saved_model import tag_constants
 
-QUERY_BITRATE = 5 # HD
+QUERY_BITRATE = 1 # HD
 
 ## HD QUERY : the situation is bad and we were expected bitrate to be SD, but actual bitrate is HD
 
@@ -45,7 +45,6 @@ def k_test(filename,k,download_time):
     for j in range(k):
         eps = network.getNewVariable()
         # network.userDefineInputVars.append(eps)
-        # 0-4 SECONDS
         network.setLowerBound(eps, DOWNLOAD_TIME)#-MARABOU_ERR)
         network.setUpperBound(eps, DOWNLOAD_TIME)#+MARABOU_ERR)  # max : 4s
         past_chunk_download_time_eps.append(eps)
@@ -58,7 +57,7 @@ def k_test(filename,k,download_time):
     chunk_size_upper_bounds = [.2, .45, .71, 1.1, 1.75, 2.4]
     first_chunk_size = network.getNewVariable()
     network.setLowerBound(first_chunk_size, chunk_size_lower_bounds[1])
-    network.setUpperBound(first_chunk_size, chunk_size_lower_bounds[1])
+    network.setUpperBound(first_chunk_size, chunk_size_upper_bounds[1])
 
 
     for var in unused_inputs:
@@ -185,6 +184,7 @@ def k_test(filename,k,download_time):
     for network_output in all_outputs:
         print("=============")
         for bit_rate_var in network_output:
+            print(bit_rate_var)
             if bit_rate_var == network_output[QUERY_BITRATE]:
                 continue
             eq = MarabouUtils.Equation(EquationType=MarabouCore.Equation.GE)
@@ -202,8 +202,8 @@ def k_test(filename,k,download_time):
 
     print("all_inputs = ", all_inputs)
     print("used_inputs = ", used_inputs)
-    utils.handle_results("HD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
-
+    result = utils.handle_results("HD",k, DOWNLOAD_TIME, vals, last_chunk_bit_rate, current_buffer_size, past_chunk_throughput,past_chunk_download_time,next_chunk_sizes,number_of_chunks_left,all_outputs)
+    return result
 
 
 def main():
