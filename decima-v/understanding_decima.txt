@@ -1,0 +1,93 @@
+
+/cs/labs/guykatz/tomerel/vrl/proj/decima-v
+p queries/marabou_query.py results/output_graph.pb 1
+
+
+Agent:
+
+====== OBSERVATION (input to the main agent)======
+job_dags:  <utils.OrderedSet object at 0x7f3d6edd96a0>
+dag =  <spark_env.job_dag.JobDAG object at 0x7f3d6cf27898>
+dag =  <spark_env.job_dag.JobDAG object at 0x7f3d6ce0a828>
+dag =  <spark_env.job_dag.JobDAG object at 0x7f3d6cd24400>
+dag =  <spark_env.job_dag.JobDAG object at 0x7f3d6cc830f0>
+source_job:  <spark_env.job_dag.JobDAG object at 0x7f3d6cd24400>
+num_source_exec:  32
+frontier_nodes:  <utils.OrderedSet object at 0x7f3d675e26a0>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cf7d668>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cf9ca90>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cdf5c50>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cd24390>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cd14ef0>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cca6630>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6ccb2400>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6ccb24e0>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6ccc2be0>
+frontier_node =  <spark_env.node.Node object at 0x7f3d6cccdf28>
+executor_limits:  {<spark_env.job_dag.JobDAG object at 0x7f3d6cf27898>: 34, <spark_env.job_dag.JobDAG object at 0x7f3d6ce0a828>: 34, <spark_env.job_dag.JobDAG object at 0x7f3d6cd24400>: 0, <spark_env.job_dag.JobDAG object at 0x7f3d6cc830f0>: 0}
+exec_commit:  <spark_env.executor_commit.ExecutorCommit object at 0x7f3d6edd9588>
+moving_executors:  <spark_env.moving_executors.MovingExecutors object at 0x7f3d6edd9550>
+action_map:  <spark_env.action_map.two_way_unordered_map object at 0x7f3d675e24a8>
+
+
+
+class JobDAG(object):
+        nodes: list of N nodes
+        adj_mat: N by N 0-1 adjacency matrix, e_ij = 1 -> edge from i to j
+
+        # set of executors currently running on the job
+        self.executors = OrderedSet()
+
+        for node in self.nodes:
+            if node.is_schedulable():
+                self.frontier_nodes.add(node)
+
+Node(object):
+
+        idx
+        tasks
+        wall_time
+        task_duration
+        executors
+        parent_nodes
+        child_nodes
+        descendant_nodes
+        job_dag
+
+frontier_node - if it has more tasks and it is not done and parent node done. (i.e can be execute)
+
+
+translate_state is transition from observation:
+job_dags:
+source_job:
+num_source_exec:
+frontier_nodes:
+executor_limits:
+exec_commit:
+moving_executors:
+action_map:
+
+
+to:
+node_inputs:
+job_inputs:
+job_dags:
+source_job:
+num_source_exec:
+frontier_nodes:
+executor_limits:
+exec_commit:
+moving_executors:
+exec_map:
+action_map:
+
+
+than -      git gcn_mats, gcn_masks, dag_summ_backward_map, \
+            running_dags_mat, job_dags_changed = \
+            self.postman.get_msg_path(job_dags)
+
+
+
+action (output):
+	two dimensional action (v,li) consisting of a stage v (node) and the parallelism limit li for v’s job i. If job i currently has fewer than li executors,
+	Decima assigns executors to v up to the limit.
