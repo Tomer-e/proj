@@ -48,6 +48,7 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph, as_text = False
                         del node.input[1]
 
             whitelist_names = []
+            
             for node in gd.node:
                 if (node.name.startswith('InceptionResnet') or node.name.startswith('embeddings') or
                         node.name.startswith('image_batch') or node.name.startswith('label_batch') or
@@ -64,8 +65,8 @@ def frozen_graph_maker(checkpoints_dir,model_name, output_graph, as_text = False
             output_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
                 sess,  # The session is used to retrieve the weights
                 gd,
-                output_nodes[-1]  # The output node names are used to select the usefull
-                #                 ["actor_agent_30/fully_connected_7/BiasAdd"]
+                # [output_nodes[-1]] # The output node names are used to select the usefull
+                                ["actor_agent_30/fully_connected_7/BiasAdd"]
             )
             # Finally we serialize and dump the output graph to the filesystem
             # print(output_nodes[-1])
