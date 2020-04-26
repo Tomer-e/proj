@@ -86,6 +86,12 @@ than -      git gcn_mats, gcn_masks, dag_summ_backward_map, \
             running_dags_mat, job_dags_changed = \
             self.postman.get_msg_path(job_dags)
 
+Inputs to the TF model:
+ - node_inputs, job_inputs - source - translate_state
+ - node_valid_mask, job_valid_mask - get_valid_masks(job_dags, frontier_nodes,
+   source_job, num_source_exec, exec_map, action_map. all inputs are translate state outputs )
+ - gcn_mats, gcn_masks, running_dags_mat, dag_summ_backward_map - postman.get_msg_path(jobs_dags- translate state output)
+ - summ_mats - get_unfinished_nodes_summ_mat (jobs_dags- translate state output)
 
 
 action (output):
